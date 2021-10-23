@@ -10,6 +10,7 @@ class pose_detection:
   #put in the userImage and proImage
   def __init__(self, userImage, proImage):
     self.IMAGE_FILES = [userImage, proImage]
+    self.landmarks_array = []
 
   def detect_pose(self):
     # For static images:
@@ -20,14 +21,14 @@ class pose_detection:
         enable_segmentation=True,
         min_detection_confidence=0.5) as pose:
       for idx, file in enumerate(self.IMAGE_FILES):
-        print(file)
         image = cv2.imread(file)
         image_height, image_width, _ = image.shape
         # Convert the BGR image to RGB before processing.
         results = pose.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-
+        
         if not results.pose_landmarks:
           continue
+        self.landmarks_array.insert(idx, results.pose_landmarks)
         print(
             f'Nose coordinates: ('
             f'{results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE].x * image_width}, '

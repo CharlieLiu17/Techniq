@@ -10,3 +10,5 @@ venv creation and activation:   (virtual environment (venv) lets you
 Packages:
     mediapipe       (pip install mediapipe)
     cv2             (pip install opencv-python)
+
+    flask           (pip install flask) Need this for working on site

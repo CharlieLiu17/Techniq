@@ -116,8 +116,6 @@ venv.bak/
 #.vscode
 .vscode/
 
-#tmp file
-tmp/
 
 # Spyder project settings
 .spyderproject
