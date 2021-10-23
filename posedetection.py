@@ -55,6 +55,12 @@ class pose_detection:
         # Plot pose world landmarks. PUT IN ANOTHER FUNCTION
         # mp_drawing.plot_landmarks(
         #     results.pose_world_landmarks, mp_pose.POSE_CONNECTIONS)
+
+  #angle_two is pro's
+  #angle_one is user's
+  def compare_angle(self, angle_one, angle_two):
+    return (angle_one > (angle_two - ANGLE_TOLERANCE)) and (angle_one < (angle_two + ANGLE_TOLERANCE))
+  
   def transform(self):
     # each index of landmarks array will hold an array of coordinates (landmark)
     # if you want to access the user set of landmarks, it's going to be 0, pro 1
