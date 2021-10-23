@@ -1,6 +1,7 @@
 import cv2
 import mediapipe as mp
 import numpy as np
+import math
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -53,6 +54,21 @@ class pose_detection:
         # Plot pose world landmarks. PUT IN ANOTHER FUNCTION
         # mp_drawing.plot_landmarks(
         #     results.pose_world_landmarks, mp_pose.POSE_CONNECTIONS)
+        
+  def get_angle(self, landmark_one, landmark_two, landmark_three):
+    vector_one = get_vector(landmark_two, landmark_one)
+    vector_two = get_vector(landmark_two, landmark_three)
+    cross_prod = vector_one[0] * vector_two[0] + vector_one[1] * vector_two[1] + vector_one[2] * vector_two[2]
+    magnitude = math.sqrt(vector_one[0] * vector_one[1] * vector_one[2]) * math.sqrt(vector_two[0] * vector_two[1] * vector_two[2])
+    angle = math.acos(cross_prod / magnitude)
+    return angle
+
+  def get_vector(self, a, b):
+    x = b.x - a.x
+    y = b.y - a.y
+    z = b.z - a.z
+    coordinate_list = [x, y, z]
+    return coordinate_list
 pd = pose_detection("./jump1.jpg", "./jump2.jpg")
 pd.detect_pose()
 
