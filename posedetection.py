@@ -13,6 +13,7 @@ class pose_detection:
     self.IMAGE_FILES = [userImage, proImage]
     self.landmarks_array = []
     self.transformCode = []
+    self.specBodyPart = {}
 
   def detect_pose(self):
     # For static images:
@@ -58,8 +59,13 @@ class pose_detection:
 
   #angle_two is pro's
   #angle_one is user's
-  def compare_angle(self, angle_one, angle_two):
-    return (angle_one > (angle_two - ANGLE_TOLERANCE)) and (angle_one < (angle_two + ANGLE_TOLERANCE))
+  def int compare_angle(self, angle_one, angle_two):
+    if (angle_one > (angle_two + ANGLE_TOLERANCE):
+      return 1
+    else if (angle_one < (angle_two - ANGLE_TOLERANCE)):
+      return -1
+    else:
+      return 0;
   
   def transform(self):
     # each index of landmarks array will hold an array of coordinates (landmark)
@@ -100,18 +106,18 @@ class pose_detection:
     specBodyPart["armProRight"] = get_angle(self, self.landmarks_array.landmark[1][12], self.landmarks_array.landmark[1][14], self.landmarks_array.landmark[1][16]);
 
     # left arm
-    if (!compareAngle(specBodyPart["armUserLeft"], specBodyPart["armProLeft"])) {
+    if (compareAngle(specBodyPart["armUserLeft"], specBodyPart["armProLeft"]) == -1) {
        print("You should extend your left elbow out more around " + (specBodyPart["armProLeft"] - specBodyPart["armUserLeft"]) + " degrees more.")
-    } else if (specBodyPart["armProLeft"] - specBodyPart["armUserLeft"] < -0.5) {
+    } else if (compareAngle(specBodyPart["armUserLeft"], specBodyPart["armProLeft"]) == 1) {
        print("Your left elbow is extended too far. You should contract your left elbow towards your body. Contract it closer to your body by " + (specBodyPart["armProLeft"] - specBodyPart["armUserLeft"]) + " degrees.")
     } else {
       print("Your left elbow position seems great! Keep up the good work.")
     }
 
     # right arm
-    if (specBodyPart["armProRight"] - specBodyPart["armUserRight"] > 0.5) {
+    if (compare(specBodyPart["armProRight"], specBodyPart["armUserRight"]) == 1) {
        print("You should extend your right elbow out more around " + (specBodyPart["armProRight"] - specBodyPart["armUserRight"]) + " degrees more.")
-    } else if (specBodyPart["armProRight"] - specBodyPart["armUserRight"] < 0.5) {
+    } else if (compareAngle(specBodyPart["armProRight"],specBodyPart["armUserRight"]) == -1) {
        print("Your right elbow is extended too far. You should contract your right elbow towards your body. Contract it closer to your body by " + (specBodyPart["armProLeft"] - specBodyPart["armUserLeft"]) + " degrees.")
     } else {
       print("Your right elbow position seems great! Keep up the good work.")
