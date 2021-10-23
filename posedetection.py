@@ -12,6 +12,7 @@ class pose_detection:
   def __init__(self, userImage, proImage):
     self.IMAGE_FILES = [userImage, proImage]
     self.landmarks_array = []
+    self.transformCode = []
 
   def detect_pose(self):
     # For static images:
@@ -54,6 +55,18 @@ class pose_detection:
         # Plot pose world landmarks. PUT IN ANOTHER FUNCTION
         # mp_drawing.plot_landmarks(
         #     results.pose_world_landmarks, mp_pose.POSE_CONNECTIONS)
+  def transform(self):
+    # each index of landmarks array will hold an array of coordinates (landmark)
+    # if you want to access the user set of landmarks, it's going to be 0, pro 1
+    # want to find a landmark that will serve as the origin and find the difference btwn user and pro of that one coordinate 
+    # find the difference and add that to every single coordinate 
+    transformCode[0] = self.landmarks_array[1][0].x - self.landmarks_array[0][0].x 
+    transformCode[1] = self.landmarks_array[1][0].y - self.landmarks_array[0][0].y
+
+    for bodyPart in self.landmarks_array[0]:
+      bodyPart.x = bodyPart.x + transformCode[0]
+      bodyPart.y = bodyPart.y + transformCode[1]
+      
         
   def get_angle(self, landmark_one, landmark_two, landmark_three):
     vector_one = get_vector(landmark_two, landmark_one)
