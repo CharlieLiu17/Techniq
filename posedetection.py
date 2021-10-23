@@ -1,5 +1,7 @@
 import cv2
 import mediapipe as mp
+import numpy as np
+
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_pose = mp.solutions.pose
@@ -21,9 +23,9 @@ with mp_pose.Pose(
     if not results.pose_landmarks:
       continue
     print(
-        f'Nose coordinates: ('
-        f'{results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE].x * image_width}, '
-        f'{results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE].y * image_height})'
+        'Nose coordinates: ('
+        '{results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE].x * image_width}, '
+        '{results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE].y * image_height})'
     )
 
     annotated_image = image.copy()
@@ -44,5 +46,6 @@ with mp_pose.Pose(
     # Plot pose world landmarks.
     mp_drawing.plot_landmarks(
         results.pose_world_landmarks, mp_pose.POSE_CONNECTIONS)
-def video_upload_1 () : 
+
+#def video_upload_1 () : 
     # upload the first video 
