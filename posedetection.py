@@ -53,8 +53,8 @@ class pose_detection:
             landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
         cv2.imwrite('./tmp/annotated_image' + str(idx) + '.png', annotated_image)
         #Plot pose world landmarks. PUT IN ANOTHER FUNCTION
-        mp_drawing.plot_landmarks(
-            results.pose_world_landmarks, mp_pose.POSE_CONNECTIONS)
+        # mp_drawing.plot_landmarks(
+        #     results.pose_world_landmarks, mp_pose.POSE_CONNECTIONS)
 
   #angle_two is pro's
   #angle_one is user's
@@ -136,9 +136,9 @@ class pose_detection:
                         [math.cos(z_angle), -math.sin(z_angle),0],
                         [0,0,1]]
     
-    self.landmarks_array[0] *= x_rotation_matrix
-    self.landmarks_array[0] *= y_rotation_matrix
-    self.landmarks_array[0] *= z_rotation_matrix
+    self.landmarks_array.landmark[0] *= x_rotation_matrix
+    self.landmarks_array.landmark[0] *= y_rotation_matrix
+    self.landmarks_array.landmark[0] *= z_rotation_matrix
 
     
 
