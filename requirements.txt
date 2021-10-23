@@ -1,0 +1,4 @@
+Python Version: 3.8.5
+Packages:
+    mediapipe       (pip install mediapipe)
+    
