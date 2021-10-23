@@ -1,5 +1,14 @@
 Python Version: 3.8.5
+    
+venv creation and activation:   (virtual environment (venv) lets you
+                                install python packages in a local environment, to keep everything contained) 
+    creation: python3 -m venv venv
+    activation: source venv/bin/activate (mac)
+                ./venv/bin/activate (windows)
+
+
 Packages:
     mediapipe       (pip install mediapipe)
     cv2             (pip install opencv-python)
-    
+
+    flask           (pip install flask) Need this for working on site
