@@ -52,9 +52,9 @@ class pose_detection:
             mp_pose.POSE_CONNECTIONS,
             landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
         cv2.imwrite('./tmp/annotated_image' + str(idx) + '.png', annotated_image)
-        # Plot pose world landmarks. PUT IN ANOTHER FUNCTION
-        # mp_drawing.plot_landmarks(
-        #     results.pose_world_landmarks, mp_pose.POSE_CONNECTIONS)
+        #Plot pose world landmarks. PUT IN ANOTHER FUNCTION
+        mp_drawing.plot_landmarks(
+            results.pose_world_landmarks, mp_pose.POSE_CONNECTIONS)
 
   #angle_two is pro's
   #angle_one is user's
@@ -88,9 +88,64 @@ class pose_detection:
     z = b.z - a.z
     coordinate_list = [x, y, z]
     return coordinate_list
+
+  def get_2D_vector(self,axis_dropped, a,b): 
+    x = b.x - a.x
+    y = b.y - a.y
+    z = b.z - a.z
+    coordinate_list = [x, y, z]
+    if axis_dropped == "z": 
+      coordinate_list[2] = 0
+    elif axis_dropped == "y": 
+      coordinate_list[1] = 0
+    elif axis_dropped == "x": 
+      coordinate_list[0] = 0
+    return coordinate_list
+
+  def get_2D_angle(self, axis_dropped, landmark_one, landmark_two, landmark_three): 
+    # axis_dropped is the value that will not be considered in the coordinate point 
+    # e.g if z is dropped, then the angle between two points in the x-y plane 
+    vector_one = self.get_2D_vector(landmark_two, landmark_one)
+    vector_two = self.get_2D_vector(landmark_two, landmark_three)
+    cross_prod = vector_one[0] * vector_two[0] + vector_one[1] * vector_two[1] + vector_one[2] * vector_two[2]
+    magnitude = math.sqrt(vector_one[0] * vector_one[1] * vector_one[2]) * math.sqrt(vector_two[0] * vector_two[1] * vector_two[2])
+    angle = math.acos(cross_prod / magnitude)
+    return angle
+  
+  def rotate(self): 
+    # find the value for the amount that the user's landmarks need to rotate in order to be in the same orientation to the pros
+    # Compare the two coordinates in 3d space, and then find the transformation matrix that transform the user’s image to the professional’s
+    # Apply transformation matrix on every coordinate of user
+    # rotate about the left hip 
+
+    # find the angle between the two hips with the nose at the origins 
+    nose = self.landmarks_array[1][0]
+    user_left_hip = self.landmarks_array[0][23]
+    pro_left_hip = self.landmarks_array[0][23]
+    z_angle = self.get_2D_angle("z",user_left_hip, nose, pro_left_hip)  # angle in the x-y plane- angle of rotation about z axis 
+    y_angle = self.get_2D_angle("y",user_left_hip, nose, pro_left_hip)
+    x_angle = self.get_2D_angle("x",user_left_hip, nose, pro_left_hip)
+
+    x_rotation_matrix = [[1,0,0],
+                        [0,math.cos(x_angle), -math.sin(x_angle)],
+                        [0,math.sin(x_angle), math.cos(x_angle)]]
+    y_rotation_matrix = [[math.cos(y_angle), 0 ,math.sin(y_angle)],
+                        [0, 1, 0],
+                        [-math.sin(y_angle),0, math.cos(y_angle)]]
+    z_rotation_matrix = [[math.cos(z_angle),-math.sin(z_angle),0],
+                        [math.cos(z_angle), -math.sin(z_angle),0],
+                        [0,0,1]]
+    
+    self.landmarks_array[0] *= x_rotation_matrix
+    self.landmarks_array[0] *= y_rotation_matrix
+    self.landmarks_array[0] *= z_rotation_matrix
+
+    
+
+
+
 pd = pose_detection("./jump1.jpg", "./jump2.jpg")
 pd.detect_pose()
 
 
-#def video_upload_1 () : 
-    # upload the first video 
+
