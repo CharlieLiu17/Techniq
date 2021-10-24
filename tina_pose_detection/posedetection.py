@@ -2,10 +2,31 @@ import cv2
 import mediapipe as mp
 import numpy as np
 import math
+from flask import Flask, render_template, request
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_pose = mp.solutions.pose
+
+app = Flask(__name__) 
+
+def execute():
+    return pose_detection(jump1.jpg, jump2.jpg)
+
+@app.route('/send_data', methods = ['POST'])
+
+def get_userInput():
+    image = request.files['image']
+    if image.filename != '':
+        image.save(image.filename)
+    return detect_pose(image)
+
+@app.route('/')
+
+def index():
+    return render_template('index.html', x = execute())
+
+
 
 class pose_detection:
   #put in the userImage and proImage
@@ -59,10 +80,10 @@ class pose_detection:
 
   #angle_two is pro's
   #angle_one is user's
-  def int compare_angle(self, angle_one, angle_two):
-    if (angle_one > (angle_two + ANGLE_TOLERANCE):
+  def compare_angle(self, angle_one, angle_two):
+    if (angle_one > (angle_two + ANGLE_TOLERANCE)):
       return 1
-    else if (angle_one < (angle_two - ANGLE_TOLERANCE)):
+    elif (angle_one < (angle_two - ANGLE_TOLERANCE)):
       return -1
     else:
       return 0;
@@ -96,122 +117,118 @@ class pose_detection:
     z = b.z - a.z
     coordinate_list = [x, y, z]
     return coordinate_list
+    
+    def bodyCheck(self):
+        print("Please wait while the advice on your form is being generated!")
+        #arm
+        specBodyPart["armUserLeft"] = get_angle(self, self.landmarks_array.landmark[0][11], self.landmarks_array.landmark[0][13], self.landmarks_array.landmark[0][15]);
+        specBodyPart["armProLeft"] = get_angle(self, self.landmarks_array.landmark[1][11], self.landmarks_array.landmark[1][13], self.landmarks_array.landmark[1][15]);
+        specBodyPart["armUserRight"] = get_angle(self, self.landmarks_array.landmark[0][12], self.landmarks_array.landmark[0][14], self.landmarks_array.landmark[0][16]);
+        specBodyPart["armProRight"] = get_angle(self, self.landmarks_array.landmark[1][12], self.landmarks_array.landmark[1][14], self.landmarks_array.landmark[1][16]);
 
-  def bodyCheck(self): 
-    print("Please wait while the advice on your form is being generated!")
-    #arm
-    specBodyPart["armUserLeft"] = get_angle(self, self.landmarks_array.landmark[0][11], self.landmarks_array.landmark[0][13], self.landmarks_array.landmark[0][15]);
-    specBodyPart["armProLeft"] = get_angle(self, self.landmarks_array.landmark[1][11], self.landmarks_array.landmark[1][13], self.landmarks_array.landmark[1][15]);
-    specBodyPart["armUserRight"] = get_angle(self, self.landmarks_array.landmark[0][12], self.landmarks_array.landmark[0][14], self.landmarks_array.landmark[0][16]);
-    specBodyPart["armProRight"] = get_angle(self, self.landmarks_array.landmark[1][12], self.landmarks_array.landmark[1][14], self.landmarks_array.landmark[1][16]);
+        # left arm
+        if (compare_angle(specBodyPart["armUserLeft"], specBodyPart["armProLeft"]) == -1):
+            print("You should extend your left elbow out more around " + (specBodyPart["armProLeft"] - specBodyPart["armUserLeft"]) + " degrees more.")
+        elif (compare_angle(specBodyPart["armUserLeft"], specBodyPart["armProLeft"]) == 1):
+            print("Your left elbow is extended too far. You should contract your left elbow more towards your body by " + (specBodyPart["armProLeft"] - specBodyPart["armUserLeft"]) + " degrees.")
+        else:
+            print("Your left elbow position seems great! Keep up the good work.")
 
-    # left arm
-    if (compareAngle(specBodyPart["armUserLeft"], specBodyPart["armProLeft"]) == -1) {
-       print("You should extend your left elbow out more around " + (specBodyPart["armProLeft"] - specBodyPart["armUserLeft"]) + " degrees more.")
-    } else if (compareAngle(specBodyPart["armUserLeft"], specBodyPart["armProLeft"]) == 1) {
-       print("Your left elbow is extended too far. You should contract your left elbow towards your body. Contract it closer to your body by " + (specBodyPart["armProLeft"] - specBodyPart["armUserLeft"]) + " degrees.")
-    } else {
-      print("Your left elbow position seems great! Keep up the good work.")
-    }
+        # right arm
+        if (compare_angle(specBodyPart["armProRight"], specBodyPart["armUserRight"]) == -1):
+            print("You should extend your right elbow out more around " + (specBodyPart["armProRight"] - specBodyPart["armUserRight"]) + " degrees more.")
+        elif (compare_angle(specBodyPart["armProRight"],specBodyPart["armUserRight"]) == 1):
+            print("Your right elbow is extended too far. You should contract your right elbow more towards your body by " + (specBodyPart["armProLeft"] - specBodyPart["armUserLeft"]) + " degrees.")
+        else:
+            print("Your right elbow position seems great! Keep up the good work.")
+        
 
-    # right arm
-    if (compare(specBodyPart["armProRight"], specBodyPart["armUserRight"]) == 1) {
-       print("You should extend your right elbow out more around " + (specBodyPart["armProRight"] - specBodyPart["armUserRight"]) + " degrees more.")
-    } else if (compareAngle(specBodyPart["armProRight"],specBodyPart["armUserRight"]) == -1) {
-       print("Your right elbow is extended too far. You should contract your right elbow towards your body. Contract it closer to your body by " + (specBodyPart["armProLeft"] - specBodyPart["armUserLeft"]) + " degrees.")
-    } else {
-      print("Your right elbow position seems great! Keep up the good work.")
-    }
+        #leg/knee
+        specBodyPart["kneeUserLeft"] = get_angle(self, self.landmarks_array.landmark[0][23], self.landmarks_array.landmark[0][25], self.landmarks_array.landmark[0][27]);
+        specBodyPart["kneeProLeft"] = get_angle(self, self.landmarks_array.landmark[1][23], self.landmarks_array.landmark[1][25], self.landmarks_array.landmark[1][27]);
+        specBodyPart["kneeUserRight"] = get_angle(self, self.landmarks_array.landmark[0][24], self.landmarks_array.landmark[0][26], self.landmarks_array.landmark[0][28]);
+        specBodyPart["kneeProRight"] = get_angle(self, self.landmarks_array.landmark[1][24], self.landmarks_array.landmark[1][26], self.landmarks_array.landmark[1][28]);
+        if (compare_angle(specBodyPart["kneeProLeft"], specBodyPart["kneeUserLeft"]) == -1):
+            print("You should extend your left knee out more around " + (specBodyPart["kneeProLeft"] - specBodyPart["kneeUserLeft"]) + " degrees more.")
+        elif (compare_angle(specBodyPart["kneeProLeft"], specBodyPart["kneeUserLeft"]) == 1):
+            print("Your left knee is extended too far. You should contract your left knee towards your body by " + (specBodyPart["kneeProLeft"] - specBodyPart["kneeUserLeft"]) + " degrees.")
+        else:
+            print("Your left knee position seems great! Keep up the good work.")
+        
+        if (compare_angle(specBodyPart["kneeProRight"], specBodyPart["kneeUserRight"]) == -1):
+            print("You should extend your right knee out more around " + (specBodyPart["kneeProRight"] - specBodyPart["kneeUserRight"]) + " degrees more.")
+        elif (compare_angle(specBodyPart["kneeProRight"], specBodyPart["kneeUserRight"]) == 1):
+            print("Your right knee is extended too far. You should contract your right knee towards your body. Contract it closer to your body by " + (specBodyPart["armProLeft"] - specBodyPart["armUserLeft"]) + " degrees.")
+        else:
+            print("Your right knee position seems great! Keep up the good work.")
+        
 
-    #leg/knee
-    specBodyPart["kneeUserLeft"] = get_angle(self, self.landmarks_array.landmark[0][23], self.landmarks_array.landmark[0][25], self.landmarks_array.landmark[0][27]);
-    specBodyPart["kneeProLeft"] = get_angle(self, self.landmarks_array.landmark[1][23], self.landmarks_array.landmark[1][25], self.landmarks_array.landmark[1][27]);
-    specBodyPart["kneeUserRight"] = get_angle(self, self.landmarks_array.landmark[0][24], self.landmarks_array.landmark[0][26], self.landmarks_array.landmark[0][28]);
-    specBodyPart["kneeProRight"] = get_angle(self, self.landmarks_array.landmark[1][24], self.landmarks_array.landmark[1][26], self.landmarks_array.landmark[1][28]);
-    if (specBodyPart["kneeProLeft"] - specBodyPart["kneeUserLeft"] > 0.01) {
-       print("You should extend your left knee out more around " + (specBodyPart["kneeProLeft"] - specBodyPart["kneeUserLeft"]) + " degrees more.")
-    } else if (specBodyPart["kneeProLeft"] - specBodyPart["kneeUserLeft"] < -0.5) {
-       print("Your left knee is extended too far. You should contract your left knee towards your body. Contract it closer to your body by " + (specBodyPart["kneeProLeft"] - specBodyPart["kneeUserLeft"]) + " degrees.")
-    } else {
-      print("Your left knee position seems great! Keep up the good work.")
-    }
+        #hip
+        specBodyPart["hipUserLeft"] = get_angle(self, self.landmarks_array.landmark[0][24], self.landmarks_array.landmark[0][23], self.landmarks_array.landmark[0][25]);
+        specBodyPart["hipProLeft"] = get_angle(self, self.landmarks_array.landmark[1][24], self.landmarks_array.landmark[1][23], self.landmarks_array.landmark[1][25]);
+        specBodyPart["hipUserRight"] = get_angle(self, self.landmarks_array.landmark[0][23], self.landmarks_array.landmark[0][24], self.landmarks_array.landmark[0][26]);
+        specBodyPart["hipProRight"] = get_angle(self, self.landmarks_array.landmark[1][23], self.landmarks_array.landmark[1][24], self.landmarks_array.landmark[1][26]);
 
-    if (specBodyPart["kneeProRight"] - specBodyPart["kneeUserRight"] > 0.5) {
-       print("You should extend your right knee out more around " + (specBodyPart["kneeProRight"] - specBodyPart["kneeUserRight"]) + " degrees more.")
-    } else if (specBodyPart["kneeProRight"] - specBodyPart["kneeUserRight"] < 0.5) {
-       print("Your right knee is extended too far. You should contract your right knee towards your body. Contract it closer to your body by " + (specBodyPart["armProLeft"] - specBodyPart["armUserLeft"]) + " degrees.")
-    } else {
-      print("Your right knee position seems great! Keep up the good work.")
-    }
+        if (compare_angle(specBodyPart["hipProLeft"], specBodyPart["hipUserLeft"]) == 1):
+            print("You should extend your left leg out more by around " + (specBodyPart["hipProLeft"] - specBodyPart["hipUserLeft"]) + " degrees more.")
+        elif (compare_angle(specBodyPart["hipProLeft"], specBodyPart["hipUserLeft"] == -1)):
+            print("Your left leg is extended too far outwards. You should bring in your left leg by " + (specBodyPart["hipProLeft"] - specBodyPart["hipUserLeft"]) + " degrees.")
+        else:
+            print("Your leg position seems great! Keep up the good work.")
+        
 
-    #hip
-    specBodyPart["hipUserLeft"] = get_angle(self, self.landmarks_array.landmark[0][24], self.landmarks_array.landmark[0][23], self.landmarks_array.landmark[0][25]);
-    specBodyPart["hipProLeft"] = get_angle(self, self.landmarks_array.landmark[1][24], self.landmarks_array.landmark[1][23], self.landmarks_array.landmark[1][25]);
-    specBodyPart["hipUserRight"] = get_angle(self, self.landmarks_array.landmark[0][23], self.landmarks_array.landmark[0][24], self.landmarks_array.landmark[0][26]);
-    specBodyPart["hipProRight"] = get_angle(self, self.landmarks_array.landmark[1][23], self.landmarks_array.landmark[1][24], self.landmarks_array.landmark[1][26]);
+        if (compare_angle(specBodyPart["hipProRight"], specBodyPart["hipUserRight"]) == 1):
+            print("You should extend your right leg out more by around " + (specBodyPart["hipProRight"] - specBodyPart["hipUserRight"]) + " degrees more.")
+        elif (compare_angle(specBodyPart["hipProRight"], specBodyPart["hipUserRight"]) == -1):
+            print("Your right leg is extended too far outwards. You should bring your right leg in by " + (specBodyPart["hipProRight"] - specBodyPart["hipUserRight"]) + " degrees.")
+        else:
+            print("Your right leg position seems great! Keep up the good work.")
+    
 
-    if (specBodyPart["hipProLeft"] - specBodyPart["hipUserLeft"] > 0.5) {
-       print("You should extend your left leg out more by around " + (specBodyPart["hipProLeft"] - specBodyPart["hipUserLeft"]) + " degrees more.")
-    } else if (specBodyPart["hipProLeft"] - specBodyPart["hipUserLeft"] < -0.5) {
-        print("Your left leg is extended too far outwards. You should bring in your left leg by " + (specBodyPart["hipProLeft"] - specBodyPart["hipUserLeft"]) + " degrees.")
-    } else {
-       print("Your leg position seems great! Keep up the good work.")
-    }
+        #side body
+        specBodyPart["sideUserLeft"] = get_angle(self, self.landmarks_array.landmark[0][11], self.landmarks_array.landmark[0][23], self.landmarks_array.landmark[0][25]);
+        specBodyPart["sideProLeft"] = get_angle(self, self.landmarks_array.landmark[1][11], self.landmarks_array.landmark[1][23], self.landmarks_array.landmark[1][25]);
+        specBodyPart["sideUserRight"] = get_angle(self, self.landmarks_array.landmark[0][12], self.landmarks_array.landmark[0][24], self.landmarks_array.landmark[0][26]);
+        specBodyPart["sideProRight"] = get_angle(self, self.landmarks_array.landmark[1][12], self.landmarks_array.landmark[1][24], self.landmarks_array.landmark[1][26]);
 
-    if (specBodyPart["hipProRight"] - specBodyPart["hipUserRight"] > 0.5) {
-       print("You should extend your right leg out more by around " + (specBodyPart["hipProRight"] - specBodyPart["hipUserRight"]) + " degrees more.")
-    } else if (specBodyPart["hipProRight"] - specBodyPart["hipUserRight"] < 0.5) {
-       print("Your right leg is extended too far outwards. You should bring your right leg in by " + (specBodyPart["hipProRight"] - specBodyPart["hipUserRight"]) + " degrees.")
-    } else {
-      print("Your right leg position seems great! Keep up the good work.")
-    }
+        if (compare_angle(specBodyPart["sideProLeft"], specBodyPart["sideUserLeft"]) == 1):
+            print("The left side of your body is straighter than desired. You should drop your left shoulder and lean in further by " + (specBodyPart["sideProLeft"] - specBodyPart["sideUserLeft"]) + " degrees.")
+        elif (compare_angle(specBodyPart["sideProLeft"], specBodyPart["sideUserLeft"]) == -1):
+            print("Your left side of your body is more angled than desired. You should raise your left shoulder and straighten out your spine a bit more by " + (specBodyPart["sideProLeft"] - specBodyPart["sideUserLeft"]) + " degrees.")
+        else:
+            print("Your left oblique side bend seems great! Keep up the good work.")
 
-    #side body
-    specBodyPart["sideUserLeft"] = get_angle(self, self.landmarks_array.landmark[0][11], self.landmarks_array.landmark[0][23], self.landmarks_array.landmark[0][25]);
-    specBodyPart["sideProLeft"] = get_angle(self, self.landmarks_array.landmark[1][11], self.landmarks_array.landmark[1][23], self.landmarks_array.landmark[1][25]);
-    specBodyPart["sideUserRight"] = get_angle(self, self.landmarks_array.landmark[0][12], self.landmarks_array.landmark[0][24], self.landmarks_array.landmark[0][26]);
-    specBodyPart["sideProRight"] = get_angle(self, self.landmarks_array.landmark[1][12], self.landmarks_array.landmark[1][24], self.landmarks_array.landmark[1][26]);
+        if (compare_angle(specBodyPart["sideProRight"], specBodyPart["sideUserRight"]) == 1):
+            print("The right side of your body is straighter than desired. You should drop your right shoulder and lean in further by " + (specBodyPart["sideProRight"] - specBodyPart["sideUserRight"]) + " degrees more.")
+        elif (compare_angle(specBodyPart["sideProRight"],specBodyPart["sideUserRight"]) == -1):
+            print("Your right side of your body is more angled than desired. You should raise your right shoulder and straighten out your spine a bit more by " + (specBodyPart["sideProRight"] - specBodyPart["sideUserLeft"]) + " degrees.")
+        else:
+            print("Your right oblique side bend seems great! Keep up the good work.")
 
-    if (specBodyPart["sideProLeft"] - specBodyPart["sideUserLeft"] > 0.5) {
-       print("The left side of your body is straighter than desired. You should drop your left shoulder and lean in further by " + (specBodyPart["sideProLeft"] - specBodyPart["sideUserLeft"]) + " degrees.")
-    } else if (specBodyPart["sideProLeft"] - specBodyPart["sideUserLeft"] < -0.5) {
-       print("Your left side of your body is more angled than desired. You should raise your left shoulder and straighten out your spine a bit more by " + (specBodyPart["sideProLeft"] - specBodyPart["sideUserLeft"]) + " degrees.")
-    } else {
-      print("Your left oblique side bend seems great! Keep up the good work.")
-    }
+        #arm pit
+        specBodyPart["armPitUserLeft"] = get_angle(self, self.landmarks_array.landmark[0][13], self.landmarks_array.landmark[0][11], self.landmarks_array.landmark[0][23]);
+        specBodyPart["armPitProLeft"] = get_angle(self, self.landmarks_array.landmark[1][13], self.landmarks_array.landmark[1][11], self.landmarks_array.landmark[1][23]);
+        specBodyPart["armPitUserRight"] = get_angle(self, self.landmarks_array.landmark[0][14], self.landmarks_array.landmark[0][12], self.landmarks_array.landmark[0][24]);
+        specBodyPart["armPitProRight"] = get_angle(self, self.landmarks_array.landmark[1][14], self.landmarks_array.landmark[1][12], self.landmarks_array.landmark[1][24]);
 
-    if (specBodyPart["sideProRight"] - specBodyPart["sideUserRight"] > 0.5) {
-       print("The right side of your body is straighter than desired. You should drop your right shoulder and lean in further by " + (specBodyPart["sideProRight"] - specBodyPart["sideUserRight"]) + " degrees more.")
-    } else if (specBodyPart["sideProRight"] - specBodyPart["sideUserRight"] < 0.5) {
-       print("Your right side of your body is more angled than desired. You should raise your right shoulder and straighten out your spine a bit more by " + (specBodyPart["sideProRight"] - specBodyPart["sideUserLeft"]) + " degrees.")
-    } else {
-      print("Your right oblique side bend seems great! Keep up the good work.")
-    }
+        if (compare_angle(specBodyPart["armPitProLeft"], specBodyPart["armPitUserLeft"]) == 1):
+            print("Your left arm is dropped to low to your side. Your left arm should be raised up more by " + (specBodyPart["armPitProLeft"] - specBodyPart["armPitUserLeft"]) + " degrees.")
+        elif (compare_angle(specBodyPart["armPitProLeft"], specBodyPart["armPitUserLeft"]) == -1):
+            print("Your left arm is raised to high. Your left arm should be lowered down to your side more by " + (specBodyPart["armPitProLeft"] - specBodyPart["armPitUserLeft"]) + " degrees.")
+        else:
+            print("Your left arm position looks great! Keep up the good work.")
 
-    #arm pit
-    specBodyPart["armPitUserLeft"] = get_angle(self, self.landmarks_array.landmark[0][13], self.landmarks_array.landmark[0][11], self.landmarks_array.landmark[0][23]);
-    specBodyPart["armPitProLeft"] = get_angle(self, self.landmarks_array.landmark[1][13], self.landmarks_array.landmark[1][11], self.landmarks_array.landmark[1][23]);
-    specBodyPart["armPitUserRight"] = get_angle(self, self.landmarks_array.landmark[0][14], self.landmarks_array.landmark[0][12], self.landmarks_array.landmark[0][24]);
-    specBodyPart["armPitProRight"] = get_angle(self, self.landmarks_array.landmark[1][14], self.landmarks_array.landmark[1][12], self.landmarks_array.landmark[1][24]);
-
-    if (specBodyPart["armPitProLeft"] - specBodyPart["armPitUserLeft"] > 0.5) {
-       print("Your left arm is dropped to low to your side. Your left arm should be raised up more by " + (specBodyPart["armPitProLeft"] - specBodyPart["armPitUserLeft"]) + " degrees.")
-    } else if (specBodyPart["armPitProLeft"] - specBodyPart["armPitUserLeft"] < -0.5) {
-       print("Your left arm is raised to high. Your left arm should be lowered down to your side more by " + (specBodyPart["armPitProLeft"] - specBodyPart["armPitUserLeft"]) + " degrees.")
-    } else {
-      print("Your left arm position looks great! Keep up the good work.")
-    }
-
-    if (specBodyPart["armPitProRight"] - specBodyPart["armPitUserRight"] > 0.5) {
-       print("Your right arm is dropped to low to your side. Your right arm should be raised up more by " + (specBodyPart["armPitProRight"] - specBodyPart["armPitUserRight"]) + " degrees more.")
-    } else if (specBodyPart["armPitProRight"] - specBodyPart["armPitUserRight"] < 0.5) {
-       print("Your right arm is raised to high. Your right arm should be lowered down to your side more by " + (specBodyPart["armPitProRight"] - specBodyPart["armPitUserRight"]) + " degrees.")
-    } else {
-      print("Your right arm position looks great! Keep up the good work.")
-    }
+        if (compare_angle(specBodyPart["armPitProRight"] - specBodyPart["armPitUserRight"]) == 1):
+            print("Your right arm is dropped to low to your side. Your right arm should be raised up more by " + (specBodyPart["armPitProRight"] - specBodyPart["armPitUserRight"]) + " degrees more.")
+        elif (compare_angle(specBodyPart["armPitProRight"] - specBodyPart["armPitUserRight"]) == -1):
+            print("Your right arm is raised to high. Your right arm should be lowered down to your side more by " + (specBodyPart["armPitProRight"] - specBodyPart["armPitUserRight"]) + " degrees.")
+        else:
+            print("Your right arm position looks great! Keep up the good work.")
+        
 pd = pose_detection("./jump1.jpg", "./jump2.jpg")
 pd.detect_pose()
-
+if __name__ == "__main__":
+   app.run(host='0.0.0.0', debug=True)
 
 #def video_upload_1 () : 
     # upload the first video 
