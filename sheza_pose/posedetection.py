@@ -149,17 +149,17 @@ class pose_detection:
 
         # left arm
         if (compare_angle(specBodyPart["armUserLeft"], specBodyPart["armProLeft"]) == -1):
-            print("You should extend your left elbow out more around " + (specBodyPart["armProLeft"] - specBodyPart["armUserLeft"]) + " degrees more.")
-        elif (compare_angle(specBodyPart["armUserLeft"], specBodyPart["armProLeft"]) == 1):
-            print("Your left elbow is extended too far. You should contract your left elbow more towards your body by " + (specBodyPart["armProLeft"] - specBodyPart["armUserLeft"]) + " degrees.")
+            print("You should extend your left elbow out more around " + (specBodyPart["armProLeft"] - specBodyPart["armUserLeft"]) + " radians more.")
+        elif (self.compare_angle(specBodyPart["armUserLeft"], specBodyPart["armProLeft"]) == 1):
+            print("Your left elbow is extended too far. You should contract your left elbow more towards your body by " + (specBodyPart["armProLeft"] - specBodyPart["armUserLeft"]) + " radians.")
         else:
             print("Your left elbow position seems great! Keep up the good work.")
 
         # right arm
         if (compare_angle(specBodyPart["armProRight"], specBodyPart["armUserRight"]) == -1):
-            print("You should extend your right elbow out more around " + (specBodyPart["armProRight"] - specBodyPart["armUserRight"]) + " degrees more.")
-        elif (compare_angle(specBodyPart["armProRight"],specBodyPart["armUserRight"]) == 1):
-            print("Your right elbow is extended too far. You should contract your right elbow more towards your body by " + (specBodyPart["armProLeft"] - specBodyPart["armUserLeft"]) + " degrees.")
+            print("You should extend your right elbow out more around " + (specBodyPart["armProRight"] - specBodyPart["armUserRight"]) + " radians more.")
+        elif (self.compare_angle(specBodyPart["armProRight"],specBodyPart["armUserRight"]) == 1):
+            print("Your right elbow is extended too far. You should contract your right elbow more towards your body by " + (specBodyPart["armProLeft"] - specBodyPart["armUserLeft"]) + " radians.")
         else:
             print("Your right elbow position seems great! Keep up the good work.")
         
@@ -170,16 +170,16 @@ class pose_detection:
         specBodyPart["kneeUserRight"] = get_angle(self, self.landmarks_array.landmark[0][24], self.landmarks_array.landmark[0][26], self.landmarks_array.landmark[0][28])
         specBodyPart["kneeProRight"] = get_angle(self, self.landmarks_array.landmark[1][24], self.landmarks_array.landmark[1][26], self.landmarks_array.landmark[1][28])
         if (compare_angle(specBodyPart["kneeProLeft"], specBodyPart["kneeUserLeft"]) == -1):
-            print("You should extend your left knee out more around " + (specBodyPart["kneeProLeft"] - specBodyPart["kneeUserLeft"]) + " degrees more.")
-        elif (compare_angle(specBodyPart["kneeProLeft"], specBodyPart["kneeUserLeft"]) == 1):
-            print("Your left knee is extended too far. You should contract your left knee towards your body by " + (specBodyPart["kneeProLeft"] - specBodyPart["kneeUserLeft"]) + " degrees.")
+            print("You should extend your left knee out more around " + (specBodyPart["kneeProLeft"] - specBodyPart["kneeUserLeft"]) + " radians more.")
+        elif (self.compare_angle(specBodyPart["kneeProLeft"], specBodyPart["kneeUserLeft"]) == 1):
+            print("Your left knee is extended too far. You should contract your left knee towards your body by " + (specBodyPart["kneeProLeft"] - specBodyPart["kneeUserLeft"]) + " radians.")
         else:
             print("Your left knee position seems great! Keep up the good work.")
         
         if (compare_angle(specBodyPart["kneeProRight"], specBodyPart["kneeUserRight"]) == -1):
-            print("You should extend your right knee out more around " + (specBodyPart["kneeProRight"] - specBodyPart["kneeUserRight"]) + " degrees more.")
-        elif (compare_angle(specBodyPart["kneeProRight"], specBodyPart["kneeUserRight"]) == 1):
-            print("Your right knee is extended too far. You should contract your right knee towards your body. Contract it closer to your body by " + (specBodyPart["armProLeft"] - specBodyPart["armUserLeft"]) + " degrees.")
+            print("You should extend your right knee out more around " + (specBodyPart["kneeProRight"] - specBodyPart["kneeUserRight"]) + " radians more.")
+        elif (self.compare_angle(specBodyPart["kneeProRight"], specBodyPart["kneeUserRight"]) == 1):
+            print("Your right knee is extended too far. You should contract your right knee towards your body. Contract it closer to your body by " + (specBodyPart["armProLeft"] - specBodyPart["armUserLeft"]) + " radians.")
         else:
             print("Your right knee position seems great! Keep up the good work.")
         
@@ -191,17 +191,17 @@ class pose_detection:
         specBodyPart["hipProRight"] = get_angle(self, self.landmarks_array.landmark[1][23], self.landmarks_array.landmark[1][24], self.landmarks_array.landmark[1][26])
 
         if (compare_angle(specBodyPart["hipProLeft"], specBodyPart["hipUserLeft"]) == 1):
-            print("You should extend your left leg out more by around " + (specBodyPart["hipProLeft"] - specBodyPart["hipUserLeft"]) + " degrees more.")
-        elif (compare_angle(specBodyPart["hipProLeft"], specBodyPart["hipUserLeft"] == -1)):
-            print("Your left leg is extended too far outwards. You should bring in your left leg by " + (specBodyPart["hipProLeft"] - specBodyPart["hipUserLeft"]) + " degrees.")
+            print("You should extend your left leg out more by around " + (specBodyPart["hipProLeft"] - specBodyPart["hipUserLeft"]) + " radians more.")
+        elif (self.compare_angle(specBodyPart["hipProLeft"], specBodyPart["hipUserLeft"] == -1)):
+            print("Your left leg is extended too far outwards. You should bring in your left leg by " + (specBodyPart["hipProLeft"] - specBodyPart["hipUserLeft"]) + " radians.")
         else:
             print("Your leg position seems great! Keep up the good work.")
         
 
         if (compare_angle(specBodyPart["hipProRight"], specBodyPart["hipUserRight"]) == 1):
-            print("You should extend your right leg out more by around " + (specBodyPart["hipProRight"] - specBodyPart["hipUserRight"]) + " degrees more.")
-        elif (compare_angle(specBodyPart["hipProRight"], specBodyPart["hipUserRight"]) == -1):
-            print("Your right leg is extended too far outwards. You should bring your right leg in by " + (specBodyPart["hipProRight"] - specBodyPart["hipUserRight"]) + " degrees.")
+            print("You should extend your right leg out more by around " + (specBodyPart["hipProRight"] - specBodyPart["hipUserRight"]) + " radians more.")
+        elif (self.compare_angle(specBodyPart["hipProRight"], specBodyPart["hipUserRight"]) == -1):
+            print("Your right leg is extended too far outwards. You should bring your right leg in by " + (specBodyPart["hipProRight"] - specBodyPart["hipUserRight"]) + " radians.")
         else:
             print("Your right leg position seems great! Keep up the good work.")
 
@@ -213,16 +213,16 @@ class pose_detection:
         specBodyPart["sideProRight"] = get_angle(self, self.landmarks_array.landmark[1][12], self.landmarks_array.landmark[1][24], self.landmarks_array.landmark[1][26])
 
         if (compare_angle(specBodyPart["sideProLeft"], specBodyPart["sideUserLeft"]) == 1):
-            print("The left side of your body is straighter than desired. You should drop your left shoulder and lean in further by " + (specBodyPart["sideProLeft"] - specBodyPart["sideUserLeft"]) + " degrees.")
-        elif (compare_angle(specBodyPart["sideProLeft"], specBodyPart["sideUserLeft"]) == -1):
-            print("Your left side of your body is more angled than desired. You should raise your left shoulder and straighten out your spine a bit more by " + (specBodyPart["sideProLeft"] - specBodyPart["sideUserLeft"]) + " degrees.")
+            print("The left side of your body is straighter than desired. You should drop your left shoulder and lean in further by " + (specBodyPart["sideProLeft"] - specBodyPart["sideUserLeft"]) + " radians.")
+        elif (self.compare_angle(specBodyPart["sideProLeft"], specBodyPart["sideUserLeft"]) == -1):
+            print("Your left side of your body is more angled than desired. You should raise your left shoulder and straighten out your spine a bit more by " + (specBodyPart["sideProLeft"] - specBodyPart["sideUserLeft"]) + " radians.")
         else:
             print("Your left oblique side bend seems great! Keep up the good work.")
 
         if (compare_angle(specBodyPart["sideProRight"], specBodyPart["sideUserRight"]) == 1):
-            print("The right side of your body is straighter than desired. You should drop your right shoulder and lean in further by " + (specBodyPart["sideProRight"] - specBodyPart["sideUserRight"]) + " degrees more.")
-        elif (compare_angle(specBodyPart["sideProRight"],specBodyPart["sideUserRight"]) == -1):
-            print("Your right side of your body is more angled than desired. You should raise your right shoulder and straighten out your spine a bit more by " + (specBodyPart["sideProRight"] - specBodyPart["sideUserLeft"]) + " degrees.")
+            print("The right side of your body is straighter than desired. You should drop your right shoulder and lean in further by " + (specBodyPart["sideProRight"] - specBodyPart["sideUserRight"]) + " radians more.")
+        elif (self.compare_angle(specBodyPart["sideProRight"],specBodyPart["sideUserRight"]) == -1):
+            print("Your right side of your body is more angled than desired. You should raise your right shoulder and straighten out your spine a bit more by " + (specBodyPart["sideProRight"] - specBodyPart["sideUserLeft"]) + " radians.")
         else:
             print("Your right oblique side bend seems great! Keep up the good work.")
 
@@ -233,16 +233,16 @@ class pose_detection:
         specBodyPart["armPitProRight"] = get_angle(self, self.landmarks_array.landmark[1][14], self.landmarks_array.landmark[1][12], self.landmarks_array.landmark[1][24])
 
         if (compare_angle(specBodyPart["armPitProLeft"], specBodyPart["armPitUserLeft"]) == 1):
-            print("Your left arm is dropped to low to your side. Your left arm should be raised up more by " + (specBodyPart["armPitProLeft"] - specBodyPart["armPitUserLeft"]) + " degrees.")
-        elif (compare_angle(specBodyPart["armPitProLeft"], specBodyPart["armPitUserLeft"]) == -1):
-            print("Your left arm is raised to high. Your left arm should be lowered down to your side more by " + (specBodyPart["armPitProLeft"] - specBodyPart["armPitUserLeft"]) + " degrees.")
+            print("Your left arm is dropped to low to your side. Your left arm should be raised up more by " + (specBodyPart["armPitProLeft"] - specBodyPart["armPitUserLeft"]) + " radians.")
+        elif (self.compare_angle(specBodyPart["armPitProLeft"], specBodyPart["armPitUserLeft"]) == -1):
+            print("Your left arm is raised to high. Your left arm should be lowered down to your side more by " + (specBodyPart["armPitProLeft"] - specBodyPart["armPitUserLeft"]) + " radians.")
         else:
             print("Your left arm position looks great! Keep up the good work.")
 
         if (compare_angle(specBodyPart["armPitProRight"] - specBodyPart["armPitUserRight"]) == 1):
-            print("Your right arm is dropped to low to your side. Your right arm should be raised up more by " + (specBodyPart["armPitProRight"] - specBodyPart["armPitUserRight"]) + " degrees more.")
-        elif (compare_angle(specBodyPart["armPitProRight"] - specBodyPart["armPitUserRight"]) == -1):
-            print("Your right arm is raised to high. Your right arm should be lowered down to your side more by " + (specBodyPart["armPitProRight"] - specBodyPart["armPitUserRight"]) + " degrees.")
+            print("Your right arm is dropped to low to your side. Your right arm should be raised up more by " + (specBodyPart["armPitProRight"] - specBodyPart["armPitUserRight"]) + " radians more.")
+        elif (self.compare_angle(specBodyPart["armPitProRight"] - specBodyPart["armPitUserRight"]) == -1):
+            print("Your right arm is raised to high. Your right arm should be lowered down to your side more by " + (specBodyPart["armPitProRight"] - specBodyPart["armPitUserRight"]) + " radians.")
         else:
             print("Your right arm position looks great! Keep up the good work.")
 
