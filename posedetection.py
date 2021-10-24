@@ -1,6 +1,7 @@
 import cv2
 import mediapipe as mp
 import numpy as np
+from flask import Flask, render_template, request
 import math
 
 mp_drawing = mp.solutions.drawing_utils
@@ -113,7 +114,12 @@ class pose_detection:
   #angle_two is pro's
   #angle_one is user's
   def compare_angle(self, angle_one, angle_two):
-    return (angle_one > (angle_two - ANGLE_TOLERANCE)) and (angle_one < (angle_two + ANGLE_TOLERANCE))
+    if (angle_one > (angle_two + ANGLE_TOLERANCE)):
+      return 1
+    elif (angle_one < (angle_two - ANGLE_TOLERANCE)):
+      return -1
+    else:
+      return 0
   
   def transform(self):
         # each index of landmarks array will hold an array of coordinates (landmark)
