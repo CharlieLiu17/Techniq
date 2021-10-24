@@ -91,6 +91,8 @@ class pose_detection:
         self.world_landmarks[idx], mp_pose.POSE_CONNECTIONS)
     # mp_drawing.plot_landmarks(
     #     self.world_landmarks[idx], mp_pose.POSE_CONNECTIONS)
+
+  def doubleShow(self, idx):
     
   def scale(self):
     user = self.landmarks_array[0].landmark
@@ -126,11 +128,15 @@ class pose_detection:
     # if you want to access the user set of landmarks, it's going to be 0, pro 1
     # want to find a landmark that will serve as the origin and find the difference btwn user and pro of that one coordinate 
     # find the difference and add that to every single coordinate 
-    transformCode[0] = self.landmarks_array.landmark[1][0].x - self.landmarks_array.landmark[0][0].x 
-    transformCode[1] = self.landmarks_array.landmark[1][0].y - self.landmarks_array.landmark[0][0].y
-    transformCode[2] = self.landmarks_array.landmark[1][0].z - self.landmarks_array.landmark[0][0].z
+    transformCode = [0,0,0]
+    transformCode[0] = self.landmarks_array[1].landmark[0].x - self.landmarks_array[0].landmark[0].x 
+    transformCode[1] = self.landmarks_array[1].landmark[0].y - self.landmarks_array[0].landmark[0].y
+    transformCode[2] = self.landmarks_array[1].landmark[0].z - self.landmarks_array[0].landmark[0].z
 
-    for bodyPart in self.landmarks_array.landmark[0]:
+    print(transformCode[0])
+    print(transformCode[1])
+    print(transformCode[2])
+    for bodyPart in self.landmarks_array[0].landmark:
       bodyPart.x = bodyPart.x + transformCode[0]
       bodyPart.y = bodyPart.y + transformCode[1]
       bodyPart.z = bodyPart.z + transformCode[2]
@@ -301,7 +307,7 @@ class pose_detection:
     vector_one = get_vector(landmark_two, landmark_one)
     vector_two = get_vector(landmark_two, landmark_three)
     cross_prod = vector_one[0] * vector_two[0] + vector_one[1] * vector_two[1] + vector_one[2] * vector_two[2]
-    magnitude = math.sqrt(vector_one[0] * vector_one[1] * vector_one[2]) * math.sqrt(vector_two[0] * vector_two[1] * vector_two[2])
+    magnitude = math.sqrt(math.pow(vector_one[0], 2) + math.pow(vector_one[1], 2) + math.pow(vector_one[2],2)) * math.sqrt(math.pow(vector_two[0],2) + math.pow(vector_two[1],2) + math.pow(vector_two[2],2))
     angle = math.acos(cross_prod / magnitude)
     return angle
 
