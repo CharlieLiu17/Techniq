@@ -93,7 +93,23 @@ class pose_detection:
     #     self.world_landmarks[idx], mp_pose.POSE_CONNECTIONS)
 
   def doubleShow(self, idx):
-    
+    image = cv2.imread('./tmp/annotated_image' + str(1) + '.png')
+    # Draw segmentation on the image.
+    # To improve segmentation around boundaries, consider applying a joint
+    # # bilateral filter to "results.segmentation_mask" with "image".
+    # condition = np.stack((results.segmentation_mask,) * 3, axis=-1) > 0.1
+    # bg_image = np.zeros(image.shape, dtype=np.uint8)
+    # bg_image[:] = BG_COLOR
+    # annotated_image = np.where(condition, annotated_image, bg_image)
+    # Draw pose landmarks on the image.
+    print(self.landmarks_array[0])
+    mp_drawing.draw_landmarks(
+        image,
+        self.landmarks_array[0],
+        mp_pose.POSE_CONNECTIONS,
+        landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
+    cv2.imwrite('./tmp/annotated_image' + str(1) + '.png', image)
+
   def scale(self):
     user = self.landmarks_array[0].landmark
     pro = self.landmarks_array[1].landmark
@@ -106,12 +122,10 @@ class pose_detection:
     for idx, length in enumerate(body_connections):
       vector = self.get_vector(user[length[0]], user[length[1]])
       body_vectors.insert(idx, vector)
-      print("pre: " + str(user[length[1]].x))
       user[length[1]].x = user[length[0]].x + ratio * vector[0]
-      print("post: " + str(user[length[1]].x))
       user[length[1]].y = user[length[0]].y + ratio * vector[1]
       user[length[1]].z = user[length[0]].z + ratio * vector[2]
-    self.landmarks_array[0] = user
+    #self.landmarks_array[0] = user
     
   #angle_two is pro's
   #angle_one is user's
@@ -133,9 +147,6 @@ class pose_detection:
     transformCode[1] = self.landmarks_array[1].landmark[0].y - self.landmarks_array[0].landmark[0].y
     transformCode[2] = self.landmarks_array[1].landmark[0].z - self.landmarks_array[0].landmark[0].z
 
-    print(transformCode[0])
-    print(transformCode[1])
-    print(transformCode[2])
     for bodyPart in self.landmarks_array[0].landmark:
       bodyPart.x = bodyPart.x + transformCode[0]
       bodyPart.y = bodyPart.y + transformCode[1]
@@ -323,7 +334,8 @@ pd = pose_detection("./jump1.jpg", "./jump2.jpg")
 pd.detect_pose()
 pd.show(0)
 pd.transform()
-pd.show(0)
+#pd.scale()
+pd.doubleShow(0)
 
 # if __name__ == "__main__":
 #        app.run(host='0.0.0.0', debug=True)
