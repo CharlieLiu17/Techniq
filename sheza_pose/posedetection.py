@@ -136,9 +136,9 @@ class pose_detection:
                         [math.cos(z_angle), -math.sin(z_angle),0],
                         [0,0,1]]
     
-    self.landmarks_array.landmark[0] *= x_rotation_matrix
-    self.landmarks_array.landmark[0] *= y_rotation_matrix
-    self.landmarks_array.landmark[0] *= z_rotation_matrix
+    self.landmarks_array[0].landmark *= x_rotation_matrix
+    self.landmarks_array[0].landmark *= y_rotation_matrix
+    self.landmarks_array[0].landmark *= z_rotation_matrix
 
     
 

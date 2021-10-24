@@ -118,13 +118,13 @@ class pose_detection:
   def bodyCheck(self):
         print("Please wait while the advice on your form is being generated!")
         #arm
-        specBodyPart["armUserLeft"] = get_angle(self, self.landmarks_array.landmark[0][11], self.landmarks_array.landmark[0][13], self.landmarks_array.landmark[0][15])
+        specBodyPart["armUserLeft"] = get_angle(self, self.landmarks_array[0].landmark[11], self.landmarks_array[0].landmark[13], self.landmarks_array[0].landmark[15])
 
-        specBodyPart["armProLeft"] = get_angle(self, self.landmarks_array.landmark[1][11], self.landmarks_array.landmark[1][13], self.landmarks_array.landmark[1][15])
+        specBodyPart["armProLeft"] = get_angle(self, self.landmarks_array[1].landmark[11], self.landmarks_array[1].landmark[13], self.landmarks_array[1].landmark[15])
 
-        specBodyPart["armUserRight"] = get_angle(self, self.landmarks_array.landmark[0][12], self.landmarks_array.landmark[0][14], self.landmarks_array.landmark[0][16])
+        specBodyPart["armUserRight"] = get_angle(self, self.landmarks_array[0].landmark[12], self.landmarks_array[0].landmark[14], self.landmarks_array[0].landmark[16])
 
-        specBodyPart["armProRight"] = get_angle(self, self.landmarks_array.landmark[1][12], self.landmarks_array.landmark[1][14], self.landmarks_array.landmark[1][16])
+        specBodyPart["armProRight"] = get_angle(self, self.landmarks_array[1].landmark[12], self.landmarks_array[1].landmark[14], self.landmarks_array[1].landmark[16])
 
 
         # left arm
@@ -145,10 +145,10 @@ class pose_detection:
         
 
         #leg/knee
-        specBodyPart["kneeUserLeft"] = get_angle(self, self.landmarks_array.landmark[0][23], self.landmarks_array.landmark[0][25], self.landmarks_array.landmark[0][27])
-        specBodyPart["kneeProLeft"] = get_angle(self, self.landmarks_array.landmark[1][23], self.landmarks_array.landmark[1][25], self.landmarks_array.landmark[1][27])
-        specBodyPart["kneeUserRight"] = get_angle(self, self.landmarks_array.landmark[0][24], self.landmarks_array.landmark[0][26], self.landmarks_array.landmark[0][28])
-        specBodyPart["kneeProRight"] = get_angle(self, self.landmarks_array.landmark[1][24], self.landmarks_array.landmark[1][26], self.landmarks_array.landmark[1][28])
+        specBodyPart["kneeUserLeft"] = get_angle(self, self.landmarks_array[0].landmark[23], self.landmarks_array[0].landmark[25], self.landmarks_array[0].landmark[27])
+        specBodyPart["kneeProLeft"] = get_angle(self, self.landmarks_array[1].landmark[23], self.landmarks_array[1].landmark[25], self.landmarks_array[1].landmark[27])
+        specBodyPart["kneeUserRight"] = get_angle(self, self.landmarks_array[0].landmark[24], self.landmarks_array[0].landmark[26], self.landmarks_array[0].landmark[28])
+        specBodyPart["kneeProRight"] = get_angle(self, self.landmarks_array[1].landmark[24], self.landmarks_array[1].landmark[26], self.landmarks_array[1].landmark[28])
         if (compare_angle(specBodyPart["kneeProLeft"], specBodyPart["kneeUserLeft"]) == -1):
             print("You should extend your left knee out more around " + (specBodyPart["kneeProLeft"] - specBodyPart["kneeUserLeft"]) + " degrees more.")
         elif (compare_angle(specBodyPart["kneeProLeft"], specBodyPart["kneeUserLeft"]) == 1):
@@ -165,10 +165,10 @@ class pose_detection:
         
 
         #hip
-        specBodyPart["hipUserLeft"] = get_angle(self, self.landmarks_array.landmark[0][24], self.landmarks_array.landmark[0][23], self.landmarks_array.landmark[0][25])
-        specBodyPart["hipProLeft"] = get_angle(self, self.landmarks_array.landmark[1][24], self.landmarks_array.landmark[1][23], self.landmarks_array.landmark[1][25])
-        specBodyPart["hipUserRight"] = get_angle(self, self.landmarks_array.landmark[0][23], self.landmarks_array.landmark[0][24], self.landmarks_array.landmark[0][26])
-        specBodyPart["hipProRight"] = get_angle(self, self.landmarks_array.landmark[1][23], self.landmarks_array.landmark[1][24], self.landmarks_array.landmark[1][26])
+        specBodyPart["hipUserLeft"] = get_angle(self, self.landmarks_array[0].landmark[24], self.landmarks_array[0].landmark[23], self.landmarks_array[0].landmark[25])
+        specBodyPart["hipProLeft"] = get_angle(self, self.landmarks_array[1].landmark[24], self.landmarks_array[1].landmark[23], self.landmarks_array[1].landmark[25])
+        specBodyPart["hipUserRight"] = get_angle(self, self.landmarks_array[0].landmark[23], self.landmarks_array[0].landmark[24], self.landmarks_array[0].landmark[26])
+        specBodyPart["hipProRight"] = get_angle(self, self.landmarks_array[1].landmark[23], self.landmarks_array[1].landmark[24], self.landmarks_array[1].landmark[26])
 
         if (compare_angle(specBodyPart["hipProLeft"], specBodyPart["hipUserLeft"]) == 1):
             print("You should extend your left leg out more by around " + (specBodyPart["hipProLeft"] - specBodyPart["hipUserLeft"]) + " degrees more.")
@@ -187,10 +187,10 @@ class pose_detection:
 
 
         #side body
-        specBodyPart["sideUserLeft"] = get_angle(self, self.landmarks_array.landmark[0][11], self.landmarks_array.landmark[0][23], self.landmarks_array.landmark[0][25])
-        specBodyPart["sideProLeft"] = get_angle(self, self.landmarks_array.landmark[1][11], self.landmarks_array.landmark[1][23], self.landmarks_array.landmark[1][25])
-        specBodyPart["sideUserRight"] = get_angle(self, self.landmarks_array.landmark[0][12], self.landmarks_array.landmark[0][24], self.landmarks_array.landmark[0][26])
-        specBodyPart["sideProRight"] = get_angle(self, self.landmarks_array.landmark[1][12], self.landmarks_array.landmark[1][24], self.landmarks_array.landmark[1][26])
+        specBodyPart["sideUserLeft"] = get_angle(self, self.landmarks_array[0].landmark[11], self.landmarks_array[0].landmark[23], self.landmarks_array[0].landmark[25])
+        specBodyPart["sideProLeft"] = get_angle(self, self.landmarks_array[1].landmark[11], self.landmarks_array[1].landmark[23], self.landmarks_array[1].landmark[25])
+        specBodyPart["sideUserRight"] = get_angle(self, self.landmarks_array[0].landmark[12], self.landmarks_array[0].landmark[24], self.landmarks_array[0].landmark[26])
+        specBodyPart["sideProRight"] = get_angle(self, self.landmarks_array[1].landmark[12], self.landmarks_array[1].landmark[24], self.landmarks_array[1].landmark[26])
 
         if (compare_angle(specBodyPart["sideProLeft"], specBodyPart["sideUserLeft"]) == 1):
             print("The left side of your body is straighter than desired. You should drop your left shoulder and lean in further by " + (specBodyPart["sideProLeft"] - specBodyPart["sideUserLeft"]) + " degrees.")
@@ -207,10 +207,10 @@ class pose_detection:
             print("Your right oblique side bend seems great! Keep up the good work.")
 
         #arm pit
-        specBodyPart["armPitUserLeft"] = get_angle(self, self.landmarks_array.landmark[0][13], self.landmarks_array.landmark[0][11], self.landmarks_array.landmark[0][23])
-        specBodyPart["armPitProLeft"] = get_angle(self, self.landmarks_array.landmark[1][13], self.landmarks_array.landmark[1][11], self.landmarks_array.landmark[1][23])
-        specBodyPart["armPitUserRight"] = get_angle(self, self.landmarks_array.landmark[0][14], self.landmarks_array.landmark[0][12], self.landmarks_array.landmark[0][24])
-        specBodyPart["armPitProRight"] = get_angle(self, self.landmarks_array.landmark[1][14], self.landmarks_array.landmark[1][12], self.landmarks_array.landmark[1][24])
+        specBodyPart["armPitUserLeft"] = get_angle(self, self.landmarks_array[0].landmark[13], self.landmarks_array[0].landmark[11], self.landmarks_array[0].landmark[23])
+        specBodyPart["armPitProLeft"] = get_angle(self, self.landmarks_array[1].landmark[13], self.landmarks_array[1].landmark[11], self.landmarks_array[1].landmark[23])
+        specBodyPart["armPitUserRight"] = get_angle(self, self.landmarks_array[0].landmark[14], self.landmarks_array[0].landmark[12], self.landmarks_array[0].landmark[24])
+        specBodyPart["armPitProRight"] = get_angle(self, self.landmarks_array[1].landmark[14], self.landmarks_array[1].landmark[12], self.landmarks_array[1].landmark[24])
 
         if (compare_angle(specBodyPart["armPitProLeft"], specBodyPart["armPitUserLeft"]) == 1):
             print("Your left arm is dropped to low to your side. Your left arm should be raised up more by " + (specBodyPart["armPitProLeft"] - specBodyPart["armPitUserLeft"]) + " degrees.")
@@ -273,9 +273,9 @@ class pose_detection:
                         [math.cos(z_angle), -math.sin(z_angle),0],
                         [0,0,1]]
     
-    self.landmarks_array.landmark[0] *= x_rotation_matrix
-    self.landmarks_array.landmark[0] *= y_rotation_matrix
-    self.landmarks_array.landmark[0] *= z_rotation_matrix
+    self.landmarks_array[0].landmark *= x_rotation_matrix
+    self.landmarks_array[0].landmark *= y_rotation_matrix
+    self.landmarks_array[0].landmark *= z_rotation_matrix
         
   def get_angle(self, landmark_one, landmark_two, landmark_three):
     vector_one = get_vector(landmark_two, landmark_one)
