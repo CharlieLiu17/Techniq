@@ -7,6 +7,24 @@ mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_pose = mp.solutions.pose
 
+app = Flask(__name__) 
+
+def execute():
+    return pose_detection(jump1.jpg, jump2.jpg)
+
+@app.route('/send_data', methods = ['POST'])
+
+def get_userInput():
+    image = request.files['image']
+    if image.filename != '':
+        image.save(image.filename)
+    return detect_pose(image)
+
+@app.route('/')
+
+def index():
+    return render_template('index.html', x = execute())
+
 # the connections made between coordinates
 body_lengths = [[0,1],[1,2],[2,3],[3,7],[0,4],[4,5],[5,6],[6,8],[9,10],\
   [11,12],[11,13],[13,15],[15,17],[17,19],[15,19],[15,21],[12,14],[14,16],\
@@ -292,9 +310,8 @@ class pose_detection:
 pd = pose_detection("./jump1.jpg", "./jump2.jpg")
 pd.detect_pose()
 pd.show(0)
-pd.scale()
-pd.show(0)
 
-
+if __name__ == "__main__":
+       app.run(host='0.0.0.0', debug=True)
 #def video_upload_1 () : 
     # upload the first video 
