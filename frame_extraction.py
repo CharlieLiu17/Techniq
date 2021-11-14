@@ -2,7 +2,7 @@ import cv2
 import time
 import math
 
-REFRESH_RATE = 0.5
+REFRESH_RATE = 1
 def extract_frame(vid_path):
     # Opens the Video file
     cap = cv2.VideoCapture(vid_path)
@@ -18,6 +18,7 @@ def extract_frame(vid_path):
         ret, frame = cap.read()
         if ret == False:
             break
+        print(i)
         if (i == 0 or frame_refresh_int % i == 0):
             cv2.imwrite('./vid_extract_frames/frame'+str(i)+'.jpg',frame)
             count += 1
