@@ -3,7 +3,7 @@ import time
 import math
 
 REFRESH_RATE = 0.125
-def extract_frame(vid_path, category):
+def extract_some_frame(vid_path, category):
     # Opens the Video file
     cap = cv2.VideoCapture(vid_path)
 
@@ -26,4 +26,20 @@ def extract_frame(vid_path, category):
     cap.release()
     cv2.destroyAllWindows()
 
-extract_frame("./test_inputs/video/charlie2vid.mp4", 'pro')
+def extract_all_frame(vid_path, category):
+    # Opens the Video file
+    cap = cv2.VideoCapture(vid_path)
+
+    i = 0 
+    while(cap.isOpened()):
+        ret, frame = cap.read()
+        if ret == False:
+            break
+        cv2.imwrite('./vid_extract_frames/' + category + '/frame'+ str(i) +'.jpg', frame)
+        i+=1
+    
+    cap.release()
+    cv2.destroyAllWindows()
+
+
+extract_all_frame("./test_inputs/video/charlie2vid.mp4", 'pro')

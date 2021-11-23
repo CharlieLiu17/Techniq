@@ -2,6 +2,8 @@ import cv2
 import mediapipe as mp
 import numpy as np
 import math
+import os
+from queue import Queue
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -25,8 +27,9 @@ class pose_detection:
     self.landmarks_array = []
     self.transformCode = [None, None, None]
     self.world_landmarks = []
+    self.saved_mp_data = {}
 
-  def detect_pose(self):
+  def detect_pose_comparison(self, write_location):
     # For static images:
     BG_COLOR = (192, 192, 192) # gray
     with mp_pose.Pose(
@@ -63,12 +66,26 @@ class pose_detection:
             results.pose_landmarks,
             mp_pose.POSE_CONNECTIONS,
             landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
-        cv2.imwrite('./tmp/annotated_image' + str(idx) + '.png', annotated_image)
+        cv2.imwrite('./tmp/annotated_image' + str(idx) + '.jpg', annotated_image)
         self.world_landmarks.insert(idx, results.pose_world_landmarks)
         # Plot pose world landmarks. PUT IN ANOTHER FUNCTION
         # mp_drawing.plot_landmarks(
         #     results.pose_world_landmarks, mp_pose.POSE_CONNECTIONS)
 
+  def detect_pose_in_frame(self, file, pose): 
+      # For static images:
+    BG_COLOR = (192, 192, 192) # gray
+    
+    image = cv2.imread(file)
+    image_height, image_width, _ = image.shape
+    # Convert the BGR image to RGB before processing.
+    results = pose.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+    
+    if not results.pose_landmarks:
+        return
+    return results
+
+    
   def show(self, idx):
     # Plot pose world landmarks. PUT IN ANOTHER FUNCTION
     mp_drawing.plot_landmarks(
@@ -316,27 +333,62 @@ class pose_detection:
     z = b.z - a.z
     coordinate_list = [x, y, z]
     return coordinate_list
-  def test(self):
-        self.landmarks_array[0].landmark[13].x = 0 #test
-        self.landmarks_array[0].landmark[13].y = 0 #test
-        self.landmarks_array[0].landmark[13].z = 0 #test
 
-        self.landmarks_array[0].landmark[11].x = 0 #test
-        self.landmarks_array[0].landmark[11].y = 1 #test
-        self.landmarks_array[0].landmark[11].z = 0 #test
+#   body_part_flag key:   0 = left knee
+#                         1 = right knee
+#                         2 = left elbow
+#                         3 = right elbow
+  def get_resp_angle(self, results, body_part_flag):
+    pose_landmarks = results.pose_landmarks
+    if (body_part_flag == 0):
+        return self.get_2D_angle(pose_landmarks.landmark[23], pose_landmarks.landmark[25], pose_landmarks.landmark[27])
+    elif (body_part_flag == 1):
+        return self.get_2D_angle(pose_landmarks.landmark[24], pose_landmarks.landmark[26], pose_landmarks.landmark[28])
+    elif (body_part_flag == 2):
+        return self.get_2D_angle(pose_landmarks.landmark[11], pose_landmarks.landmark[13], pose_landmarks.landmark[15])
+    elif (body_part_flag == 3):
+        return self.get_2D_angle(pose_landmarks.landmark[12], pose_landmarks.landmark[14], pose_landmarks.landmark[16])
+        
+  def synchronize(self, user_path, pro_path, body_part_flag):
+    sharpest_delta_angle = float("-inf") #
+    sharpest_delta_angle_frame_name = ""
+    last_two = [None, None] #list of last 2 angle values, index 0 being most recent
+    for root, dirs, files in os.walk(pro_path):
+        with mp_pose.Pose(
+        static_image_mode=True,
+        model_complexity=2,
+        enable_segmentation=True,
+        min_detection_confidence=0.5) as pose:
+            for file in files:
+                if file.endswith('.jpg'):
+                    file_path = os.path.join(pro_path, file)
+                    print(sharpest_angle_frame_name + ": " + str( sharpest_angle))
+                    results = self.detect_pose_in_frame(file_path, pose)
+                    self.saved_mp_data["pro" + str(file)] = results; #should be like proframe0, userframe1, etc.
+                    angle = self.get_resp_angle(results, body_part_flag)
+                    if (last_two[0] == None): #list is empty
+                        frame_data = [file, angle]
+                        last_two[0] = frame_data
+                        continue
+                    if (last_two[1] != None): # list is filled
+                        #checking for local maximums and minimums
+                        if ((last_two[0][1] < angle and last_two[0][1] < last_two[1][1]) or (last_two[0][1] > angle and last_two[0][1] > last_two[1][1])):
+                            if (abs(last_two[0][1] - last_two[1][1]) + abs(last_two[0][1] - angle) > sharpest_angle):
+                                sharpest_delta_angle = last_two[0][1]
+                                sharpest_delta_angle_frame_name = last_two[0][0]
+                    last_two[1] = last_two[0]
+                    last_two[0] = [file, angle]
+                    
 
-        self.landmarks_array[0].landmark[15].x = 1 #test
-        self.landmarks_array[0].landmark[15].y = 0 #test
-        self.landmarks_array[0].landmark[15].z = 0 #test
-        print(self.get_2D_angle(self.landmarks_array[0].landmark[11], self.landmarks_array[0].landmark[13], self.landmarks_array[0].landmark[15]))
 
 pd = pose_detection("./test_inputs/charlie2_user.jpg", "./test_inputs/charlie2_pro.jpg")
-pd.detect_pose()
-pd.transform()
-pd.scale()
-pd.body_check()
+pd.synchronize("", "./vid_extract_frames/pro", 1)
+# pd.detect_pose()
+# pd.transform()
+# pd.scale()
+# pd.body_check()
 # pd.show(0)
 # pd.show(1)
-pd.double_show()
+# pd.double_show()
 # pd.test()
 
