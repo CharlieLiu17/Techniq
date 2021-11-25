@@ -42,4 +42,4 @@ def extract_all_frame(vid_path, category):
     cv2.destroyAllWindows()
 
 
-extract_all_frame("./test_inputs/video/charlie2vid.mp4", 'pro')
+extract_all_frame("./test_inputs/video/charlie1vid.mp4", 'user')
