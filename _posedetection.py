@@ -350,19 +350,22 @@ class pose_detection:
         return self.get_2D_angle(pose_landmarks.landmark[12], pose_landmarks.landmark[14], pose_landmarks.landmark[16])
         
   def synchronize(self, user_path, pro_path, body_part_flag):
-    sharpest_delta_angle = float("-inf") #
-    sharpest_delta_angle_frame_name = ""
+    sharpest_pro_delta = float("-inf") #
+    sharpest_pro_delta_frame_name = ""
+
+    sharpest_user_delta = float("-inf") #
+    sharpest_user_delta_frame_name = ""
     last_two = [None, None] #list of last 2 angle values, index 0 being most recent
-    for root, dirs, files in os.walk(pro_path):
-        with mp_pose.Pose(
+    with mp_pose.Pose(
         static_image_mode=True,
         model_complexity=2,
         enable_segmentation=True,
         min_detection_confidence=0.5) as pose:
+        for root, dirs, files in os.walk(pro_path):
             for file in files:
                 if file.endswith('.jpg'):
                     file_path = os.path.join(pro_path, file)
-                    print(sharpest_angle_frame_name + ": " + str( sharpest_angle))
+                    print("pro" + sharpest_pro_delta_frame_name + ": " + str(sharpest_pro_delta))
                     results = self.detect_pose_in_frame(file_path, pose)
                     self.saved_mp_data["pro" + str(file)] = results; #should be like proframe0, userframe1, etc.
                     angle = self.get_resp_angle(results, body_part_flag)
@@ -373,16 +376,37 @@ class pose_detection:
                     if (last_two[1] != None): # list is filled
                         #checking for local maximums and minimums
                         if ((last_two[0][1] < angle and last_two[0][1] < last_two[1][1]) or (last_two[0][1] > angle and last_two[0][1] > last_two[1][1])):
-                            if (abs(last_two[0][1] - last_two[1][1]) + abs(last_two[0][1] - angle) > sharpest_angle):
-                                sharpest_delta_angle = last_two[0][1]
-                                sharpest_delta_angle_frame_name = last_two[0][0]
+                            if (abs(last_two[0][1] - last_two[1][1]) + abs(last_two[0][1] - angle) > sharpest_pro_delta):
+                                sharpest_pro_delta = last_two[0][1]
+                                sharpest_pro_delta_frame_name = last_two[0][0]
+                    last_two[1] = last_two[0]
+                    last_two[0] = [file, angle]
+        last_two = [None, None]
+        for root, dirs, files in os.walk(user_path):
+            for file in files:
+                if file.endswith('.jpg'):
+                    file_path = os.path.join(user_path, file)
+                    print("user" + sharpest_user_delta_frame_name + ": " + str(sharpest_user_delta))
+                    results = self.detect_pose_in_frame(file_path, pose)
+                    self.saved_mp_data["pro" + str(file)] = results; #should be like proframe0, userframe1, etc.
+                    angle = self.get_resp_angle(results, body_part_flag)
+                    if (last_two[0] == None): #list is empty
+                        frame_data = [file, angle]
+                        last_two[0] = frame_data
+                        continue
+                    if (last_two[1] != None): # list is filled
+                        #checking for local maximums and minimums
+                        if ((last_two[0][1] < angle and last_two[0][1] < last_two[1][1]) or (last_two[0][1] > angle and last_two[0][1] > last_two[1][1])):
+                            if (abs(last_two[0][1] - last_two[1][1]) + abs(last_two[0][1] - angle) > sharpest_user_delta):
+                                sharpest_user_delta = last_two[0][1]
+                                sharpest_user_delta_frame_name = last_two[0][0]
                     last_two[1] = last_two[0]
                     last_two[0] = [file, angle]
                     
 
 
 pd = pose_detection("./test_inputs/charlie2_user.jpg", "./test_inputs/charlie2_pro.jpg")
-pd.synchronize("", "./vid_extract_frames/pro", 1)
+pd.synchronize("./vid_extract_frames/user", "./vid_extract_frames/pro", 1)
 # pd.detect_pose()
 # pd.transform()
 # pd.scale()
