@@ -3,7 +3,7 @@ import mediapipe as mp
 import numpy as np
 import math
 import os
-from queue import Queue
+import time
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -28,6 +28,8 @@ class pose_detection:
     self.transformCode = [None, None, None]
     self.world_landmarks = []
     self.saved_mp_data = {}
+    self.pro_frame_count = 0
+    self.user_frame_count = 0
 
   def detect_pose_comparison(self, write_location):
     # For static images:
@@ -334,6 +336,12 @@ class pose_detection:
     coordinate_list = [x, y, z]
     return coordinate_list
 
+  def set_user_frame_count(self, frame_count):
+      self.user_frame_count = frame_count
+
+  def set_pro_frame_count(self, frame_count):
+      self.pro_frame_count = frame_count
+
 #   body_part_flag key:   0 = left knee
 #                         1 = right knee
 #                         2 = left elbow
@@ -348,65 +356,162 @@ class pose_detection:
         return self.get_2D_angle(pose_landmarks.landmark[11], pose_landmarks.landmark[13], pose_landmarks.landmark[15])
     elif (body_part_flag == 3):
         return self.get_2D_angle(pose_landmarks.landmark[12], pose_landmarks.landmark[14], pose_landmarks.landmark[16])
-        
-  def synchronize(self, user_path, pro_path, body_part_flag):
-    sharpest_pro_delta = float("-inf") #
-    sharpest_pro_delta_frame_name = ""
 
-    sharpest_user_delta = float("-inf") #
-    sharpest_user_delta_frame_name = ""
-    last_two = [None, None] #list of last 2 angle values, index 0 being most recent
+  def find_synchro_frame(self, path, pose, body_part_flag, tag, tolerance):
+        last_two = [None, None]
+        sharpest_delta = float("-inf")
+        sharpest_angle = float("inf") #
+        sharpest_delta_frame_num = 0
+        for root, dirs, files in os.walk(path):
+            for idx, file in enumerate(files):
+                if (idx > sharpest_delta_frame_num + tolerance):
+                    break
+                if file.endswith('.jpg'):
+                    file_path = os.path.join(path, file)
+                    results = self.detect_pose_in_frame(file_path, pose)
+                    if not results.pose_landmarks:
+                        continue
+                    self.saved_mp_data[tag + str(file)] = results; #should be like proframe0, userframe1, etc.
+                    angle = self.get_resp_angle(results, body_part_flag)
+                    if (last_two[0] == None): #list is empty
+                        frame_data = [idx, angle]
+                        last_two[0] = frame_data
+                        continue
+                    if (last_two[1] != None): # list is filled
+                        #checking for local maximums and minimums
+                        if ((last_two[0][1] < angle and last_two[0][1] < last_two[1][1]) or (last_two[0][1] > angle and last_two[0][1] > last_two[1][1])):
+                            delta = abs(last_two[0][1] - angle) + abs(last_two[0][1] - last_two[1][1])
+                            # print(last_two[1][0] + ": " + str(math.degrees(last_two[1][1])))
+                            # print("pro" + last_two[0][0] + ": " + str(math.degrees(last_two[0][1])))
+                            # print(file + ": " + str(math.degrees(angle)))
+                            # print(" ")
+                            if (last_two[0][1] < sharpest_angle and delta > sharpest_delta):
+                                sharpest_delta = delta
+                                sharpest_angle = last_two[0][1]
+                                sharpest_delta_frame_num = last_two[0][0]
+                                # print(tag + str(sharpest_delta_frame_num) + ": " + str(math.degrees(sharpest_angle)))
+                    last_two[1] = last_two[0]
+                    last_two[0] = [idx, angle]
+        return sharpest_delta_frame_num - 1
+
+  def find_synchro_frame_video(self, path, pose, body_part_flag, tag, tolerance, refresh_rate):
+        last_two = [None, None]
+        sharpest_delta = float("-inf")
+        sharpest_angle = float("inf") #
+        sharpest_delta_frame_num = 0
+        
+        cap = cv2.VideoCapture(path)
+        fps = cap.get(cv2.CAP_PROP_FPS);
+
+        frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+
+        width = len(str(int(frames)))
+
+        frame_refresh_int = round(fps * refresh_rate)
+
+        i = 0 
+        while(cap.isOpened()):
+            ret, image = cap.read()
+            if ret == False:
+                break
+            image.flags.writeable = False
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            results = pose.process(image)
+            if not results.pose_landmarks:
+                break
+            if (i > sharpest_delta_frame_num + tolerance):
+                break
+            self.saved_mp_data[tag + str(i).zfill(width)] = results; #should be like proframe0, userframe1, etc.
+            angle = self.get_resp_angle(results, body_part_flag)
+            if (last_two[0] == None): #list is empty
+                frame_data = [i, angle]
+                last_two[0] = frame_data
+                i += 1
+                continue
+            if (last_two[1] != None): # list is filled
+                #checking for local maximums and minimums
+                if ((last_two[0][1] < angle and last_two[0][1] < last_two[1][1]) or (last_two[0][1] > angle and last_two[0][1] > last_two[1][1])):
+                    delta = abs(last_two[0][1] - angle) + abs(last_two[0][1] - last_two[1][1])
+                    # print(str(last_two[1][0]) + ": " + str(math.degrees(last_two[1][1])))
+                    # print("pro" + str(last_two[0][0]) + ": " + str(math.degrees(last_two[0][1])))
+                    # print(str(i) + ": " + str(math.degrees(angle)))
+                    # print(" ")
+                    if (last_two[0][1] < sharpest_angle and delta > sharpest_delta):
+                        sharpest_delta = delta
+                        sharpest_angle = last_two[0][1]
+                        sharpest_delta_frame_num = last_two[0][0]
+                        print(tag + str(sharpest_delta_frame_num) + ": " + str(math.degrees(sharpest_angle)))
+            last_two[1] = last_two[0]
+            last_two[0] = [i, angle]
+            i += 1
+        return sharpest_delta_frame_num, frames, frame_refresh_int
+        
+
+#   def find_synchro_frame_binary(self, path, pose, body_part_flag, tag, tolerance):
+#     sharpest_delta = float("-inf")
+#     sharpest_angle = float("inf") #
+#     sharpest_delta_frame_num = 0
+#     critical_frames = {}
+#     idx = 0
+#     if (tag is "pro"):
+#         idx = self.pro_frame_count / 2
+#     else:
+#         idx = self.user_frame_count / 2
+
+#     for root, dirs, files in os.walk(path):
+#         self.fsfb_recursive(path, pose, body_part_flag, tag, tolerance, files, critical_frames, idx)
+
+#   def fsfb_recursive(self, path, pose, body_part_flag, tag, tolerance, files, critical_frames, idx):
+#     file = files[idx]
+#     if file.endswith('.jpg'):
+#         file_path = os.path.join(path, file)
+#         results = self.detect_pose_in_frame(file_path, pose)
+#         if not results.pose_landmarks:
+#             continue
+
+        
+    #function attempts to synchronize the 2 input videos so that analysis can be useful
+    # looking at 3 frames at a time, look for local minimums
+    # if the local mimimum change of slope is greater 
+    # TODO write find_synchro_point to replace first two loops
+  def synchronize(self, user_path, pro_path, body_part_flag):
+     #list of last 2 angle values, index 0 being most recent
     with mp_pose.Pose(
         static_image_mode=True,
         model_complexity=2,
         enable_segmentation=True,
         min_detection_confidence=0.5) as pose:
-        for root, dirs, files in os.walk(pro_path):
-            for file in files:
-                if file.endswith('.jpg'):
-                    file_path = os.path.join(pro_path, file)
-                    print("pro" + sharpest_pro_delta_frame_name + ": " + str(sharpest_pro_delta))
-                    results = self.detect_pose_in_frame(file_path, pose)
-                    self.saved_mp_data["pro" + str(file)] = results; #should be like proframe0, userframe1, etc.
-                    angle = self.get_resp_angle(results, body_part_flag)
-                    if (last_two[0] == None): #list is empty
-                        frame_data = [file, angle]
-                        last_two[0] = frame_data
-                        continue
-                    if (last_two[1] != None): # list is filled
-                        #checking for local maximums and minimums
-                        if ((last_two[0][1] < angle and last_two[0][1] < last_two[1][1]) or (last_two[0][1] > angle and last_two[0][1] > last_two[1][1])):
-                            if (abs(last_two[0][1] - last_two[1][1]) + abs(last_two[0][1] - angle) > sharpest_pro_delta):
-                                sharpest_pro_delta = last_two[0][1]
-                                sharpest_pro_delta_frame_name = last_two[0][0]
-                    last_two[1] = last_two[0]
-                    last_two[0] = [file, angle]
-        last_two = [None, None]
-        for root, dirs, files in os.walk(user_path):
-            for file in files:
-                if file.endswith('.jpg'):
-                    file_path = os.path.join(user_path, file)
-                    print("user" + sharpest_user_delta_frame_name + ": " + str(sharpest_user_delta))
-                    results = self.detect_pose_in_frame(file_path, pose)
-                    self.saved_mp_data["pro" + str(file)] = results; #should be like proframe0, userframe1, etc.
-                    angle = self.get_resp_angle(results, body_part_flag)
-                    if (last_two[0] == None): #list is empty
-                        frame_data = [file, angle]
-                        last_two[0] = frame_data
-                        continue
-                    if (last_two[1] != None): # list is filled
-                        #checking for local maximums and minimums
-                        if ((last_two[0][1] < angle and last_two[0][1] < last_two[1][1]) or (last_two[0][1] > angle and last_two[0][1] > last_two[1][1])):
-                            if (abs(last_two[0][1] - last_two[1][1]) + abs(last_two[0][1] - angle) > sharpest_user_delta):
-                                sharpest_user_delta = last_two[0][1]
-                                sharpest_user_delta_frame_name = last_two[0][0]
-                    last_two[1] = last_two[0]
-                    last_two[0] = [file, angle]
+        # pro_frame = self.find_synchro_frame(pro_path, pose, body_part_flag, "pro", 25)
+        # user_frame = self.find_synchro_frame(user_path, pose, body_part_flag, "user", 25)
+        pro_frame, pro_frame_count, pro_frame_refresh_int = self.find_synchro_frame_video(pro_path, pose, body_part_flag, "pro", 25, 0.125)
+        user_frame, user_frame_count, user_frame_refresh_int = self.find_synchro_frame_video(user_path, pose, body_part_flag, "user", 25, 0.125)
+        max_user_starting_frames = int(user_frame / user_frame_refresh_int)
+        max_pro_starting_frames = pro_frame / pro_frame_refresh_int
+        if (max_pro_starting_frames < max_user_starting_frames):
+            starting = int(max_pro_starting_frames)
+        else:
+            starting = int(max_user_starting_frames)
+        print(starting)
+        returnDict = {}
+        returnDict["pro"] = self.synchronized_frames(pro_frame, pro_frame_refresh_int, pro_frame_count, starting)
+        returnDict["user"] = self.synchronized_frames(user_frame, user_frame_refresh_int, user_frame_count, starting)
+        return returnDict
                     
-
+   #where frame_pair is what is returned by synchronize
+  def synchronized_frames(self, frame_num, refresh_int, frames, starting):
+      frame_list = []
+      index = frame_num - refresh_int * starting
+      while (index <= frames):
+        frame_list.append(index)
+        index += refresh_int
+      return frame_list
 
 pd = pose_detection("./test_inputs/charlie2_user.jpg", "./test_inputs/charlie2_pro.jpg")
-pd.synchronize("./vid_extract_frames/user", "./vid_extract_frames/pro", 1)
+tic = time.perf_counter()
+# print(pd.synchronize("./vid_extract_frames/user", "./vid_extract_frames/pro", 1))
+print(pd.synchronize("./test_inputs/video/charlie1vid.mp4", "./test_inputs/video/charlie2vid.mp4", 1))
+toc = time.perf_counter()
+print("time: " + str(toc - tic))
 # pd.detect_pose()
 # pd.transform()
 # pd.scale()

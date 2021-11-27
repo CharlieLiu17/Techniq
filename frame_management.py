@@ -34,4 +34,4 @@ def extract_frame(vid_path, category):
     cv2.destroyAllWindows()
 
 
-extract_frame("./test_inputs/video/charlie2vid.mp4", 'pro')
+extract_frame("./test_inputs/video/charlie1vid.mp4", 'user')
