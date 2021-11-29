@@ -30,8 +30,9 @@ class pose_detection:
     self.saved_mp_data = {}
     self.pro_frame_count = 0
     self.user_frame_count = 0
+    self.analysis_frames = {}
 
-  def detect_pose_comparison(self, write_location):
+  def detect_pose_comparison(self, image_list, tag):
     # For static images:
     BG_COLOR = (192, 192, 192) # gray
     with mp_pose.Pose(
@@ -39,11 +40,13 @@ class pose_detection:
         model_complexity=2,
         enable_segmentation=True,
         min_detection_confidence=0.5) as pose:
-      for idx, file in enumerate(self.IMAGE_FILES):
-        image = cv2.imread(file)
+      for idx, image in enumerate(image_list):
         image_height, image_width, _ = image.shape
         # Convert the BGR image to RGB before processing.
-        results = pose.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        if ((tag + str(idx - 1)) in self.saved_mp_data):
+            results = self.saved_mp_data["pro" + str(idx - 1)]
+        else:
+            results = pose.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
         
         if not results.pose_landmarks:
           continue
@@ -483,29 +486,45 @@ class pose_detection:
         min_detection_confidence=0.5) as pose:
         # pro_frame = self.find_synchro_frame(pro_path, pose, body_part_flag, "pro", 25)
         # user_frame = self.find_synchro_frame(user_path, pose, body_part_flag, "user", 25)
-        pro_frame, pro_frame_count, pro_frame_refresh_int = self.find_synchro_frame_video(pro_path, pose, body_part_flag, "pro", 25, 0.125)
-        user_frame, user_frame_count, user_frame_refresh_int = self.find_synchro_frame_video(user_path, pose, body_part_flag, "user", 25, 0.125)
+        pro_frame, self.pro_frame_count, pro_frame_refresh_int = self.find_synchro_frame_video(pro_path, pose, body_part_flag, "pro", 25, 0.125)
+        user_frame, self.user_frame_count, user_frame_refresh_int = self.find_synchro_frame_video(user_path, pose, body_part_flag, "user", 25, 0.125)
         max_user_starting_frames = int(user_frame / user_frame_refresh_int)
-        max_pro_starting_frames = pro_frame / pro_frame_refresh_int
+        max_pro_starting_frames = int(pro_frame / pro_frame_refresh_int)
         if (max_pro_starting_frames < max_user_starting_frames):
-            starting = int(max_pro_starting_frames)
+            starting = max_pro_starting_frames
         else:
-            starting = int(max_user_starting_frames)
-        print(starting)
+            starting = max_user_starting_frames
+        max_user_ending_frames = int((self.user_frame_count - user_frame) / user_frame_refresh_int)
+        max_pro_ending_frames = int((self.pro_frame_count - pro_frame) / pro_frame_refresh_int)
+        if (max_pro_ending_frames < max_user_ending_frames):
+            ending = max_pro_ending_frames
+        else:
+            ending = max_user_ending_frames
         returnDict = {}
-        returnDict["pro"] = self.synchronized_frames(pro_frame, pro_frame_refresh_int, pro_frame_count, starting)
-        returnDict["user"] = self.synchronized_frames(user_frame, user_frame_refresh_int, user_frame_count, starting)
+        returnDict["pro"] = self.synchronized_frames(pro_frame, pro_frame_refresh_int, self.pro_frame_count, starting, ending)
+        returnDict["user"] = self.synchronized_frames(user_frame, user_frame_refresh_int, self.user_frame_count, starting, ending)
+        self.analysis_frames = returnDict
         return returnDict
                     
    #where frame_pair is what is returned by synchronize
-  def synchronized_frames(self, frame_num, refresh_int, frames, starting):
+  def synchronized_frames(self, frame_num, refresh_int, frames, starting, ending):
       frame_list = []
       index = frame_num - refresh_int * starting
-      while (index <= frames):
+      end = (starting + ending) * refresh_int + index
+      while (index <= frames and index <= end):
         frame_list.append(index)
         index += refresh_int
+      print(index)
+      print(end)
       return frame_list
-
+  
+  def compare_analysis_frames(self, pro_vid_path, user_vid_path):
+    pro_cap = cv2.VideoCapture(pro_vid_path)
+    user_cap = cv2.VideoCapture(user_vid_path)
+    user_frame_list = self.analysis_frames["user"]
+    for idx, frame_num in enumerate(self.analysis_frames["pro"]):
+        pro_image = pro_cap.get(2, frame_num - 1)
+        user_image = user_cap.get(2, user_frame_list[idx] - 1)
 pd = pose_detection("./test_inputs/charlie2_user.jpg", "./test_inputs/charlie2_pro.jpg")
 tic = time.perf_counter()
 # print(pd.synchronize("./vid_extract_frames/user", "./vid_extract_frames/pro", 1))
