@@ -22,8 +22,9 @@ body_connections = [[29,31],[31,27],[27,25],[25,23],[23,24],[24,26],[26,28],[28,
 
 class pose_detection:
   #put in the userImage and proImage
-  def __init__(self, userImage, proImage):
-    self.IMAGE_FILES = [userImage, proImage]
+  def __init__(self, user_vid_path, pro_vid_path):
+    self.pro_vid_path = pro_vid_path
+    self.user_vid_path = user_vid_path
     self.landmarks_array = []
     self.transformCode = [None, None, None]
     self.world_landmarks = []
@@ -32,19 +33,26 @@ class pose_detection:
     self.user_frame_count = 0
     self.analysis_frames = {}
 
-  def detect_pose_comparison(self, image_list, tag):
+  # idx 0: pro
+  # idx 1: user
+  def detect_pose_comparison(self, image_list):
     # For static images:
     BG_COLOR = (192, 192, 192) # gray
+    self.landmarks_array = []
     with mp_pose.Pose(
         static_image_mode=True,
         model_complexity=2,
         enable_segmentation=True,
         min_detection_confidence=0.5) as pose:
       for idx, image in enumerate(image_list):
+        if (idx == 0):
+            tag = "pro"
+        else:
+            tag = "user"
         image_height, image_width, _ = image.shape
         # Convert the BGR image to RGB before processing.
         if ((tag + str(idx - 1)) in self.saved_mp_data):
-            results = self.saved_mp_data["pro" + str(idx - 1)]
+            results = self.saved_mp_data[tag + str(idx - 1)]
         else:
             results = pose.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
         
@@ -71,8 +79,12 @@ class pose_detection:
             results.pose_landmarks,
             mp_pose.POSE_CONNECTIONS,
             landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
-        cv2.imwrite('./tmp/annotated_image' + str(idx) + '.jpg', annotated_image)
+        image_list[idx] = annotated_image
+        # cv2.imwrite('./tmp/annotated_image' + str(idx) + '.jpg', annotated_image)
         self.world_landmarks.insert(idx, results.pose_world_landmarks)
+      hori = np.concatenate((image_list[0], image_list[1]), axis=1)
+      cv2.imshow('Techniq', hori)
+      cv2.waitKey(5000)
         # Plot pose world landmarks. PUT IN ANOTHER FUNCTION
         # mp_drawing.plot_landmarks(
         #     results.pose_world_landmarks, mp_pose.POSE_CONNECTIONS)
@@ -477,7 +489,7 @@ class pose_detection:
     # looking at 3 frames at a time, look for local minimums
     # if the local mimimum change of slope is greater 
     # TODO write find_synchro_point to replace first two loops
-  def synchronize(self, user_path, pro_path, body_part_flag):
+  def synchronize(self, body_part_flag):
      #list of last 2 angle values, index 0 being most recent
     with mp_pose.Pose(
         static_image_mode=True,
@@ -486,8 +498,8 @@ class pose_detection:
         min_detection_confidence=0.5) as pose:
         # pro_frame = self.find_synchro_frame(pro_path, pose, body_part_flag, "pro", 25)
         # user_frame = self.find_synchro_frame(user_path, pose, body_part_flag, "user", 25)
-        pro_frame, self.pro_frame_count, pro_frame_refresh_int = self.find_synchro_frame_video(pro_path, pose, body_part_flag, "pro", 25, 0.125)
-        user_frame, self.user_frame_count, user_frame_refresh_int = self.find_synchro_frame_video(user_path, pose, body_part_flag, "user", 25, 0.125)
+        pro_frame, self.pro_frame_count, pro_frame_refresh_int = self.find_synchro_frame_video(self.pro_vid_path, pose, body_part_flag, "pro", 25, 0.125)
+        user_frame, self.user_frame_count, user_frame_refresh_int = self.find_synchro_frame_video(self.user_vid_path, pose, body_part_flag, "user", 25, 0.125)
         max_user_starting_frames = int(user_frame / user_frame_refresh_int)
         max_pro_starting_frames = int(pro_frame / pro_frame_refresh_int)
         if (max_pro_starting_frames < max_user_starting_frames):
@@ -514,21 +526,27 @@ class pose_detection:
       while (index <= frames and index <= end):
         frame_list.append(index)
         index += refresh_int
-      print(index)
-      print(end)
       return frame_list
   
-  def compare_analysis_frames(self, pro_vid_path, user_vid_path):
-    pro_cap = cv2.VideoCapture(pro_vid_path)
-    user_cap = cv2.VideoCapture(user_vid_path)
+  def compare_analysis_frames(self):
+    pro_cap = cv2.VideoCapture(self.pro_vid_path)
+    user_cap = cv2.VideoCapture(self.user_vid_path)
     user_frame_list = self.analysis_frames["user"]
     for idx, frame_num in enumerate(self.analysis_frames["pro"]):
-        pro_image = pro_cap.get(2, frame_num - 1)
-        user_image = user_cap.get(2, user_frame_list[idx] - 1)
-pd = pose_detection("./test_inputs/charlie2_user.jpg", "./test_inputs/charlie2_pro.jpg")
-tic = time.perf_counter()
+        pro_image = pro_cap.set(2, frame_num - 1)
+        res, pro_frame = pro_cap.read()
+        print(pro_cap)
+        user_image = user_cap.set(2, user_frame_list[idx] - 1)
+        res, user_frame = user_cap.read()
+        print(user_cap)
+        image_list = [pro_frame, user_frame]
+        self.detect_pose_comparison(image_list)
+pd = pose_detection("./test_inputs/video/charlie1vid.mp4", "./test_inputs/video/charlie2vid.mp4")
+
 # print(pd.synchronize("./vid_extract_frames/user", "./vid_extract_frames/pro", 1))
-print(pd.synchronize("./test_inputs/video/charlie1vid.mp4", "./test_inputs/video/charlie2vid.mp4", 1))
+pd.synchronize(0)
+tic = time.perf_counter()
+pd.compare_analysis_frames()
 toc = time.perf_counter()
 print("time: " + str(toc - tic))
 # pd.detect_pose()
