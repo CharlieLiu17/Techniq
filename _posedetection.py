@@ -22,60 +22,50 @@ body_connections = [[29,31],[31,27],[27,25],[25,23],[23,24],[24,26],[26,28],[28,
 
 class pose_detection:
   #put in the userImage and proImage
-  def __init__(self, userImage, proImage):
-    self.IMAGE_FILES = [userImage, proImage]
-    self.landmarks_array = []
+  def __init__(self, user_vid_path, pro_vid_path):
+    self.VIDEO_FILES = [user_vid_path, pro_vid_path]
+    self.landmarks_array = [None, None]
     self.transformCode = [None, None, None]
     self.world_landmarks = []
     self.saved_mp_data = {}
     self.pro_frame_count = 0
     self.user_frame_count = 0
-    self.analysis_frames = {}
+    # self.analysis_frames = {}
+    self.analysis_frames = {'pro': [3, 7, 11, 15, 19, 23, 27, 31, 35, 39, 43, 47, 51, 55, 59, 63], 'user': [8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68]}
 
-  def detect_pose_comparison(self, image_list, tag):
+  def detect_pose_comparison(self, image, tag, pose):
     # For static images:
     BG_COLOR = (192, 192, 192) # gray
-    with mp_pose.Pose(
-        static_image_mode=True,
-        model_complexity=2,
-        enable_segmentation=True,
-        min_detection_confidence=0.5) as pose:
-      for idx, image in enumerate(image_list):
-        image_height, image_width, _ = image.shape
-        # Convert the BGR image to RGB before processing.
-        if ((tag + str(idx - 1)) in self.saved_mp_data):
-            results = self.saved_mp_data["pro" + str(idx - 1)]
-        else:
-            results = pose.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-        
-        if not results.pose_landmarks:
-          continue
-        self.landmarks_array.insert(idx, results.pose_landmarks)
-        print(
-            f'Nose coordinates: ('
-            f'{results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE].x * image_width}, '
-            f'{results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE].y * image_height})'
-        )
+    
+    # Convert the BGR image to RGB before processing.
+    if (tag in self.saved_mp_data):
+        results = self.saved_mp_data[tag]
+    else:
+        results = pose.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        self.saved_mp_data[tag] = results.pose_landmarks
+    
+    if not results.pose_landmarks:
+        return None
+    else:
+        return results.pose_landmarks
 
-        annotated_image = image.copy()
-        # Draw segmentation on the image.
-        # To improve segmentation around boundaries, consider applying a joint
-        # bilateral filter to "results.segmentation_mask" with "image".
-        condition = np.stack((results.segmentation_mask,) * 3, axis=-1) > 0.1
-        bg_image = np.zeros(image.shape, dtype=np.uint8)
-        bg_image[:] = BG_COLOR
-        annotated_image = np.where(condition, annotated_image, bg_image)
-        # Draw pose landmarks on the image.
-        mp_drawing.draw_landmarks(
-            annotated_image,
-            results.pose_landmarks,
-            mp_pose.POSE_CONNECTIONS,
-            landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
-        cv2.imwrite('./tmp/annotated_image' + str(idx) + '.jpg', annotated_image)
-        self.world_landmarks.insert(idx, results.pose_world_landmarks)
-        # Plot pose world landmarks. PUT IN ANOTHER FUNCTION
-        # mp_drawing.plot_landmarks(
-        #     results.pose_world_landmarks, mp_pose.POSE_CONNECTIONS)
+        # annotated_image = image.copy()
+        # # Draw segmentation on the image.
+        # # To improve segmentation around boundaries, consider applying a joint
+        # # bilateral filter to "results.segmentation_mask" with "image".
+        # condition = np.stack((results.segmentation_mask,) * 3, axis=-1) > 0.1
+        # bg_image = np.zeros(image.shape, dtype=np.uint8)
+        # bg_image[:] = BG_COLOR
+        # annotated_image = np.where(condition, annotated_image, bg_image)
+        # # Draw pose landmarks on the image.
+        # mp_drawing.draw_landmarks(
+        #     annotated_image,
+        #     results.pose_landmarks,
+        #     mp_pose.POSE_CONNECTIONS,
+        #     landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
+        # cv2.imwrite('./tmp/annotated_image' + str(idx) + '.jpg', annotated_image)
+        # self.world_landmarks.insert(idx, results.pose_world_landmarks)
+
 
   def detect_pose_in_frame(self, file, pose): 
       # For static images:
@@ -374,7 +364,8 @@ class pose_detection:
                     results = self.detect_pose_in_frame(file_path, pose)
                     if not results.pose_landmarks:
                         continue
-                    self.saved_mp_data[tag + str(file)] = results; #should be like proframe0, userframe1, etc.
+                    print(tag+str(idx))
+                    self.saved_mp_data[tag + str(idx)] = results.pose_landmarks; #should be like proframe0, userframe1, etc.
                     angle = self.get_resp_angle(results, body_part_flag)
                     if (last_two[0] == None): #list is empty
                         frame_data = [idx, angle]
@@ -424,7 +415,7 @@ class pose_detection:
                 break
             if (i > sharpest_delta_frame_num + tolerance):
                 break
-            self.saved_mp_data[tag + str(i).zfill(width)] = results; #should be like proframe0, userframe1, etc.
+            self.saved_mp_data[tag + str(i)] = results; #should be like proframe0, userframe1, etc.
             angle = self.get_resp_angle(results, body_part_flag)
             if (last_two[0] == None): #list is empty
                 frame_data = [i, angle]
@@ -477,7 +468,7 @@ class pose_detection:
     # looking at 3 frames at a time, look for local minimums
     # if the local mimimum change of slope is greater 
     # TODO write find_synchro_point to replace first two loops
-  def synchronize(self, user_path, pro_path, body_part_flag):
+  def synchronize(self, body_part_flag):
      #list of last 2 angle values, index 0 being most recent
     with mp_pose.Pose(
         static_image_mode=True,
@@ -486,8 +477,8 @@ class pose_detection:
         min_detection_confidence=0.5) as pose:
         # pro_frame = self.find_synchro_frame(pro_path, pose, body_part_flag, "pro", 25)
         # user_frame = self.find_synchro_frame(user_path, pose, body_part_flag, "user", 25)
-        pro_frame, self.pro_frame_count, pro_frame_refresh_int = self.find_synchro_frame_video(pro_path, pose, body_part_flag, "pro", 25, 0.125)
-        user_frame, self.user_frame_count, user_frame_refresh_int = self.find_synchro_frame_video(user_path, pose, body_part_flag, "user", 25, 0.125)
+        pro_frame, self.pro_frame_count, pro_frame_refresh_int = self.find_synchro_frame_video(self.VIDEO_FILES[1], pose, body_part_flag, "pro", 25, 0.125)
+        user_frame, self.user_frame_count, user_frame_refresh_int = self.find_synchro_frame_video(self.VIDEO_FILES[0], pose, body_part_flag, "user", 25, 0.125)
         max_user_starting_frames = int(user_frame / user_frame_refresh_int)
         max_pro_starting_frames = int(pro_frame / pro_frame_refresh_int)
         if (max_pro_starting_frames < max_user_starting_frames):
@@ -518,17 +509,33 @@ class pose_detection:
       print(end)
       return frame_list
   
-  def compare_analysis_frames(self, pro_vid_path, user_vid_path):
-    pro_cap = cv2.VideoCapture(pro_vid_path)
-    user_cap = cv2.VideoCapture(user_vid_path)
+  def compare_analysis_frames(self):
+    pro_cap = cv2.VideoCapture(self.VIDEO_FILES[1])
+    user_cap = cv2.VideoCapture(self.VIDEO_FILES[0])
     user_frame_list = self.analysis_frames["user"]
-    for idx, frame_num in enumerate(self.analysis_frames["pro"]):
-        pro_image = pro_cap.get(2, frame_num - 1)
-        user_image = user_cap.get(2, user_frame_list[idx] - 1)
-pd = pose_detection("./test_inputs/charlie2_user.jpg", "./test_inputs/charlie2_pro.jpg")
+    with mp_pose.Pose(
+        static_image_mode=True,
+        model_complexity=2,
+        enable_segmentation=True,
+        min_detection_confidence=0.5) as pose:
+        for idx, frame_num in enumerate(self.analysis_frames["pro"]):
+            pro_cap.set(1, frame_num - 1)
+            pro_ret, pro_image = pro_cap.read()
+            if not pro_ret:
+                continue
+            user_cap.set(1, user_frame_list[idx] - 1)
+            user_ret, user_image = user_cap.read()
+            if not user_ret:
+                continue
+            self.landmarks_array[0] = self.detect_pose_comparison(user_image, "user" + str(user_frame_list[idx]), pose)
+            self.landmarks_array[1] = self.detect_pose_comparison(pro_image, "pro" + str(frame_num), pose)
+            self.body_check()
+
+pd = pose_detection("./test_inputs/video/charlie1vid.mp4", "./test_inputs/video/charlie2vid.mp4")
 tic = time.perf_counter()
 # print(pd.synchronize("./vid_extract_frames/user", "./vid_extract_frames/pro", 1))
-print(pd.synchronize("./test_inputs/video/charlie1vid.mp4", "./test_inputs/video/charlie2vid.mp4", 1))
+# print(pd.synchronize("./test_inputs/video/charlie1vid.mp4", "./test_inputs/video/charlie2vid.mp4", 1))
+pd.compare_analysis_frames()
 toc = time.perf_counter()
 print("time: " + str(toc - tic))
 # pd.detect_pose()
