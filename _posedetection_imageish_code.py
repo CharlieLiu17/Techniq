@@ -20,6 +20,9 @@ body_lengths = [[0,1],[1,2],[2,3],[3,7],[0,4],[4,5],[5,6],[6,8],[9,10],\
 
 body_connections = [[29,31],[31,27],[27,25],[25,23],[23,24],[24,26],[26,28],[28,30],[30,32],[24,12],[12,11],[11,13],[13,15],[15,17],[17,19],[15,21],[12,14],[14,16],[16,22],[16,20],[20,18]]
 
+bg_img = np.zeros([512,512,1],dtype=np.uint8)
+bg_img.fill(255)
+
 class pose_detection:
   #put in the userImage and proImage
   def __init__(self, user_vid_path, pro_vid_path):
@@ -30,8 +33,9 @@ class pose_detection:
     self.saved_mp_data = {}
     self.pro_frame_count = 0
     self.user_frame_count = 0
-    # self.analysis_frames = {}
-    self.analysis_frames = {'pro': [3, 7, 11, 15, 19, 23, 27, 31, 35, 39, 43, 47, 51, 55, 59, 63], 'user': [8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68]}
+    self.analysis_frames = {}
+    self.analysis_text = "" #stored code
+    # self.analysis_frames = {'pro': [3, 7, 11, 15, 19, 23, 27, 31, 35, 39, 43, 47, 51, 55, 59, 63], 'user': [8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68]}
 
   def detect_pose_comparison(self, image, tag, pose):
         # For static images:
@@ -126,8 +130,8 @@ class pose_detection:
     # self.landmarks_array[0] = user
     
     
-  #angle_two is pro's
   #angle_one is user's
+  #angle_two is pro's
   def compare_angle(self, angle_one, angle_two):
     if (angle_one > (angle_two + ANGLE_TOLERANCE)):
       return 1
@@ -531,10 +535,11 @@ class pose_detection:
             self.landmarks_array[1] = self.detect_pose_comparison(pro_image, "pro" + str(frame_num), pose)
             self.body_check()
 
+
 pd = pose_detection("./test_inputs/video/charlie1vid.mp4", "./test_inputs/video/charlie2vid.mp4")
 tic = time.perf_counter()
 # print(pd.synchronize("./vid_extract_frames/user", "./vid_extract_frames/pro", 1))
-# print(pd.synchronize("./test_inputs/video/charlie1vid.mp4", "./test_inputs/video/charlie2vid.mp4", 1))
+pd.synchronize(1)
 pd.compare_analysis_frames()
 toc = time.perf_counter()
 print("time: " + str(toc - tic))
