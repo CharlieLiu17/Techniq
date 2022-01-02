@@ -20,74 +20,56 @@ body_lengths = [[0,1],[1,2],[2,3],[3,7],[0,4],[4,5],[5,6],[6,8],[9,10],\
 
 body_connections = [[29,31],[31,27],[27,25],[25,23],[23,24],[24,26],[26,28],[28,30],[30,32],[24,12],[12,11],[11,13],[13,15],[15,17],[17,19],[15,21],[12,14],[14,16],[16,22],[16,20],[20,18]]
 
+bg_img = np.zeros([512,512,1],dtype=np.uint8)
+bg_img.fill(255)
+
 class pose_detection:
   #put in the userImage and proImage
   def __init__(self, user_vid_path, pro_vid_path):
-    self.pro_vid_path = pro_vid_path
-    self.user_vid_path = user_vid_path
-    self.landmarks_array = []
+    self.VIDEO_FILES = [user_vid_path, pro_vid_path]
+    self.landmarks_array = [None, None]
     self.transformCode = [None, None, None]
     self.world_landmarks = []
     self.saved_mp_data = {}
     self.pro_frame_count = 0
     self.user_frame_count = 0
     self.analysis_frames = {}
+    self.analysis_text = "" #stored code
+    # self.analysis_frames = {'pro': [3, 7, 11, 15, 19, 23, 27, 31, 35, 39, 43, 47, 51, 55, 59, 63], 'user': [8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68]}
 
-  # idx 0: pro
-  # idx 1: user
-  def detect_pose_comparison(self, image_list):
-    # For static images:
+  def detect_pose_comparison(self, image, tag, pose):
+        # For static images:
     BG_COLOR = (192, 192, 192) # gray
-    self.landmarks_array = []
-    with mp_pose.Pose(
-        static_image_mode=True,
-        model_complexity=2,
-        enable_segmentation=True,
-        min_detection_confidence=0.5) as pose:
-      for idx, image in enumerate(image_list):
-        if (idx == 0):
-            tag = "pro"
-        else:
-            tag = "user"
-        image_height, image_width, _ = image.shape
-        # Convert the BGR image to RGB before processing.
-        if ((tag + str(idx - 1)) in self.saved_mp_data):
-            results = self.saved_mp_data[tag + str(idx - 1)]
-        else:
-            results = pose.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-        
-        if not results.pose_landmarks:
-          continue
-        self.landmarks_array.insert(idx, results.pose_landmarks)
-        print(
-            f'Nose coordinates: ('
-            f'{results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE].x * image_width}, '
-            f'{results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE].y * image_height})'
-        )
+    
+    # Convert the BGR image to RGB before processing.
+    if (tag in self.saved_mp_data):
+        results = self.saved_mp_data[tag]
+    else:
+        results = pose.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        self.saved_mp_data[tag] = results.pose_landmarks
+    
+    if not results.pose_landmarks:
+        return None
+    else:
+        return results.pose_landmarks
 
-        annotated_image = image.copy()
-        # Draw segmentation on the image.
-        # To improve segmentation around boundaries, consider applying a joint
-        # bilateral filter to "results.segmentation_mask" with "image".
-        condition = np.stack((results.segmentation_mask,) * 3, axis=-1) > 0.1
-        bg_image = np.zeros(image.shape, dtype=np.uint8)
-        bg_image[:] = BG_COLOR
-        annotated_image = np.where(condition, annotated_image, bg_image)
-        # Draw pose landmarks on the image.
-        mp_drawing.draw_landmarks(
-            annotated_image,
-            results.pose_landmarks,
-            mp_pose.POSE_CONNECTIONS,
-            landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
-        image_list[idx] = annotated_image
+        # annotated_image = image.copy()
+        # # Draw segmentation on the image.
+        # # To improve segmentation around boundaries, consider applying a joint
+        # # bilateral filter to "results.segmentation_mask" with "image".
+        # condition = np.stack((results.segmentation_mask,) * 3, axis=-1) > 0.1
+        # bg_image = np.zeros(image.shape, dtype=np.uint8)
+        # bg_image[:] = BG_COLOR
+        # annotated_image = np.where(condition, annotated_image, bg_image)
+        # # Draw pose landmarks on the image.
+        # mp_drawing.draw_landmarks(
+        #     annotated_image,
+        #     results.pose_landmarks,
+        #     mp_pose.POSE_CONNECTIONS,
+        #     landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
         # cv2.imwrite('./tmp/annotated_image' + str(idx) + '.jpg', annotated_image)
-        self.world_landmarks.insert(idx, results.pose_world_landmarks)
-      hori = np.concatenate((image_list[0], image_list[1]), axis=1)
-      cv2.imshow('Techniq', hori)
-      cv2.waitKey(5000)
-        # Plot pose world landmarks. PUT IN ANOTHER FUNCTION
-        # mp_drawing.plot_landmarks(
-        #     results.pose_world_landmarks, mp_pose.POSE_CONNECTIONS)
+        # self.world_landmarks.insert(idx, results.pose_world_landmarks)
+
 
   def detect_pose_in_frame(self, file, pose): 
       # For static images:
@@ -148,8 +130,8 @@ class pose_detection:
     # self.landmarks_array[0] = user
     
     
-  #angle_two is pro's
   #angle_one is user's
+  #angle_two is pro's
   def compare_angle(self, angle_one, angle_two):
     if (angle_one > (angle_two + ANGLE_TOLERANCE)):
       return 1
@@ -185,17 +167,17 @@ class pose_detection:
 
     # left arm
     if (self.compare_angle(specBodyPart["armUserLeft"], specBodyPart["armProLeft"]) == -1):
-        print("You should extend your left elbow out more around " + str(round(math.degrees(specBodyPart["armProLeft"] - specBodyPart["armUserLeft"]))) + " degrees more.")
+        print("You should extend your left elbow out more around " + str(round(abs(math.degrees(specBodyPart["armProLeft"] - specBodyPart["armUserLeft"])))) + " degrees more.")
     elif (self.compare_angle(specBodyPart["armUserLeft"], specBodyPart["armProLeft"]) == 1):
-        print("You should contract your left elbow more by " + str(round(math.degrees(specBodyPart["armProLeft"] - specBodyPart["armUserLeft"]))) + " degrees.")
+        print("You should contract your left elbow more by " + str(round(abs(math.degrees(specBodyPart["armProLeft"] - specBodyPart["armUserLeft"])))) + " degrees.")
     # else:
         # print("Your left elbow position seems great! Keep up the good work.")
 
     # right arm
     if (self.compare_angle(specBodyPart["armUserRight"], specBodyPart["armProRight"]) == -1):
-        print("You should extend your right elbow out more around " + str(round(math.degrees(specBodyPart["armProRight"] - specBodyPart["armUserRight"]))) + " degrees more.")
+        print("You should extend your right elbow out more around " + str(round(abs(math.degrees(specBodyPart["armProRight"] - specBodyPart["armUserRight"])))) + " degrees more.")
     elif (self.compare_angle(specBodyPart["armUserRight"], specBodyPart["armProRight"]) == 1):
-        print("You should contract your right elbow more by " + str(round(math.degrees(specBodyPart["armProRight"] - specBodyPart["armUserRight"]))) + " degrees.")
+        print("You should contract your right elbow more by " + str(round(abs(math.degrees(specBodyPart["armProRight"] - specBodyPart["armUserRight"])))) + " degrees.")
     # else:
         # print("Your right elbow position seems great! Keep up the good work.")
     
@@ -206,16 +188,16 @@ class pose_detection:
     specBodyPart["kneeUserRight"] = self.get_2D_angle(self.landmarks_array[0].landmark[24], self.landmarks_array[0].landmark[26], self.landmarks_array[0].landmark[28])
     specBodyPart["kneeProRight"] = self.get_2D_angle(self.landmarks_array[1].landmark[24], self.landmarks_array[1].landmark[26], self.landmarks_array[1].landmark[28])
     if (self.compare_angle(specBodyPart["kneeUserLeft"], specBodyPart["kneeProLeft"]) == -1):
-        print("You should extend your left knee out more around " + str(round(math.degrees(specBodyPart["kneeProLeft"] - specBodyPart["kneeUserLeft"]))) + " degrees more.")
+        print("You should extend your left knee out more around " + str(round(abs(math.degrees(specBodyPart["kneeProLeft"] - specBodyPart["kneeUserLeft"])))) + " degrees more.")
     elif (self.compare_angle(specBodyPart["kneeUserLeft"], specBodyPart["kneeProLeft"]) == 1):
-        print("You should contract your left knee  by " + str(round(math.degrees(specBodyPart["kneeProLeft"] - specBodyPart["kneeUserLeft"]))) + " degrees.")
+        print("You should contract your left knee  by " + str(round(abs(math.degrees(specBodyPart["kneeProLeft"] - specBodyPart["kneeUserLeft"])))) + " degrees.")
     # else:
         # print("Your left knee position seems great! Keep up the good work.")
     
     if (self.compare_angle(specBodyPart["kneeProRight"], specBodyPart["kneeUserRight"]) == -1):
-        print("You should extend your right knee out more around " + str(round(math.degrees(specBodyPart["kneeProRight"] - specBodyPart["kneeUserRight"]))) + " degrees more.")
+        print("You should extend your right knee out more around " + str(round(abs(math.degrees(specBodyPart["kneeProRight"] - specBodyPart["kneeUserRight"])))) + " degrees more.")
     elif (self.compare_angle(specBodyPart["kneeProRight"], specBodyPart["kneeUserRight"]) == 1):
-        print("You should contract your right knee. Contract it closer to your body by " + str(round(math.degrees(specBodyPart["kneeProRight"] - specBodyPart["kneeUserRight"]))) + " degrees.")
+        print("You should contract your right knee. Contract it closer to your body by " + str(round(abs(math.degrees(specBodyPart["kneeProRight"] - specBodyPart["kneeUserRight"])))) + " degrees.")
     # else:
         # print("Your right knee position seems great! Keep up the good work.")
     
@@ -227,17 +209,17 @@ class pose_detection:
     specBodyPart["hipProRight"] = self.get_2D_angle(self.landmarks_array[1].landmark[23], self.landmarks_array[1].landmark[24], self.landmarks_array[1].landmark[26])
 
     if (self.compare_angle(specBodyPart["hipUserLeft"], specBodyPart["hipProLeft"]) == -1):
-        print("You should extend your left leg out more by around " + str(round(math.degrees(specBodyPart["hipProLeft"] - specBodyPart["hipUserLeft"]))) + " degrees more.")
+        print("You should extend your left leg out more by around " + str(round(abs(math.degrees(specBodyPart["hipProLeft"] - specBodyPart["hipUserLeft"])))) + " degrees more.")
     elif (self.compare_angle(specBodyPart["hipUserLeft"], specBodyPart["hipProLeft"] == 1)):
-        print("You should bring in your left leg by " + str(round(math.degrees(specBodyPart["hipProLeft"] - specBodyPart["hipUserLeft"]))) + " degrees.")
+        print("You should bring in your left leg by " + str(round(abs(math.degrees(specBodyPart["hipProLeft"] - specBodyPart["hipUserLeft"])))) + " degrees.")
     # else:
         # print("Your leg position seems great! Keep up the good work.")
     
 
     if (self.compare_angle(specBodyPart["hipUserRight"], specBodyPart["hipProRight"]) == -1):
-        print("You should extend your right leg out more by around " + str(round(math.degrees(specBodyPart["hipProRight"] - specBodyPart["hipUserRight"]))) + " degrees more.")
+        print("You should extend your right leg out more by around " + str(round(abs(math.degrees(specBodyPart["hipProRight"] - specBodyPart["hipUserRight"])))) + " degrees more.")
     elif (self.compare_angle(specBodyPart["hipUserRight"], specBodyPart["hipProRight"]) == 1):
-        print("You should bring your right leg in by " + str(round(math.degrees(specBodyPart["hipProRight"] - specBodyPart["hipUserRight"]))) + " degrees.")
+        print("You should bring your right leg in by " + str(round(abs(math.degrees(specBodyPart["hipProRight"] - specBodyPart["hipUserRight"])))) + " degrees.")
     # else:
         # print("Your right leg position seems great! Keep up the good work.")
 
@@ -247,9 +229,9 @@ class pose_detection:
     specBodyPart["sideProLeft"] = self.get_2D_angle(self.landmarks_array[1].landmark[11], self.landmarks_array[1].landmark[23], self.landmarks_array[1].landmark[25])
 
     if (self.compare_angle(specBodyPart["sideUserLeft"], specBodyPart["sideProLeft"]) == -1):
-        print("You should drop your left shoulder and lean in further by " + str(round(math.degrees(specBodyPart["sideProLeft"] - specBodyPart["sideUserLeft"]))) + " degrees.")
+        print("You should drop your left shoulder and lean in further by " + str(round(abs(math.degrees(specBodyPart["sideProLeft"] - specBodyPart["sideUserLeft"])))) + " degrees.")
     elif (self.compare_angle(specBodyPart["sideUserLeft"], specBodyPart["sideProLeft"]) == 1):
-        print("You should drop your right shoulder and lean in further by " + str(round(math.degrees(specBodyPart["sideProLeft"] - specBodyPart["sideUserLeft"]))) + " degrees.")
+        print("You should drop your right shoulder and lean in further by " + str(round(abs(math.degrees(specBodyPart["sideProLeft"] - specBodyPart["sideUserLeft"])))) + " degrees.")
     # else:
         # print("Your left oblique side bend seems great! Keep up the good work.")
 
@@ -261,16 +243,16 @@ class pose_detection:
     specBodyPart["armPitProRight"] = self.get_2D_angle(self.landmarks_array[1].landmark[14], self.landmarks_array[1].landmark[12], self.landmarks_array[1].landmark[11])
 
     if (self.compare_angle(specBodyPart["armPitUserLeft"], specBodyPart["armPitProLeft"]) == -1):
-        print("Your left arm should be raised up more by " + str(round(math.degrees(specBodyPart["armPitProLeft"] - specBodyPart["armPitUserLeft"]))) + " degrees.")
+        print("Your left arm should be raised up more by " + str(round(abs(math.degrees(specBodyPart["armPitProLeft"] - specBodyPart["armPitUserLeft"])))) + " degrees.")
     elif (self.compare_angle(specBodyPart["armPitUserLeft"], specBodyPart["armPitProLeft"]) == 1):
-        print("Your left arm should be lowered down to your side more by " + str(round(math.degrees(specBodyPart["armPitProLeft"] - specBodyPart["armPitUserLeft"]))) + " degrees.")
+        print("Your left arm should be lowered down to your side more by " + str(round(abs(math.degrees(specBodyPart["armPitProLeft"] - specBodyPart["armPitUserLeft"])))) + " degrees.")
     # else:
         # print("Your left arm position looks great! Keep up the good work.")
 
     if (self.compare_angle(specBodyPart["armPitUserRight"], specBodyPart["armPitProRight"]) == -1):
-        print(" Your right arm should be raised up more by " + str(round(math.degrees(specBodyPart["armPitProRight"] - specBodyPart["armPitUserRight"]))) + " degrees more.")
+        print(" Your right arm should be raised up more by " + str(round(abs(math.degrees(specBodyPart["armPitProRight"] - specBodyPart["armPitUserRight"])))) + " degrees more.")
     elif (self.compare_angle(specBodyPart["armPitUserRight"], specBodyPart["armPitProRight"]) == 1):
-        print("Your right arm should be lowered down to your side more by " + str(round(math.degrees(specBodyPart["armPitProRight"] - specBodyPart["armPitUserRight"]))) + " degrees.")
+        print("Your right arm should be lowered down to your side more by " + str(round(abs(math.degrees(specBodyPart["armPitProRight"] - specBodyPart["armPitUserRight"])))) + " degrees.")
     # else:
         # print("Your right arm position looks great! Keep up the good work.")
 
@@ -386,7 +368,8 @@ class pose_detection:
                     results = self.detect_pose_in_frame(file_path, pose)
                     if not results.pose_landmarks:
                         continue
-                    self.saved_mp_data[tag + str(file)] = results; #should be like proframe0, userframe1, etc.
+                    print(tag+str(idx))
+                    self.saved_mp_data[tag + str(idx)] = results.pose_landmarks; #should be like proframe0, userframe1, etc.
                     angle = self.get_resp_angle(results, body_part_flag)
                     if (last_two[0] == None): #list is empty
                         frame_data = [idx, angle]
@@ -436,7 +419,7 @@ class pose_detection:
                 break
             if (i > sharpest_delta_frame_num + tolerance):
                 break
-            self.saved_mp_data[tag + str(i).zfill(width)] = results; #should be like proframe0, userframe1, etc.
+            self.saved_mp_data[tag + str(i)] = results; #should be like proframe0, userframe1, etc.
             angle = self.get_resp_angle(results, body_part_flag)
             if (last_two[0] == None): #list is empty
                 frame_data = [i, angle]
@@ -498,8 +481,8 @@ class pose_detection:
         min_detection_confidence=0.5) as pose:
         # pro_frame = self.find_synchro_frame(pro_path, pose, body_part_flag, "pro", 25)
         # user_frame = self.find_synchro_frame(user_path, pose, body_part_flag, "user", 25)
-        pro_frame, self.pro_frame_count, pro_frame_refresh_int = self.find_synchro_frame_video(self.pro_vid_path, pose, body_part_flag, "pro", 25, 0.125)
-        user_frame, self.user_frame_count, user_frame_refresh_int = self.find_synchro_frame_video(self.user_vid_path, pose, body_part_flag, "user", 25, 0.125)
+        pro_frame, self.pro_frame_count, pro_frame_refresh_int = self.find_synchro_frame_video(self.VIDEO_FILES[1], pose, body_part_flag, "pro", 25, 0.125)
+        user_frame, self.user_frame_count, user_frame_refresh_int = self.find_synchro_frame_video(self.VIDEO_FILES[0], pose, body_part_flag, "user", 25, 0.125)
         max_user_starting_frames = int(user_frame / user_frame_refresh_int)
         max_pro_starting_frames = int(pro_frame / pro_frame_refresh_int)
         if (max_pro_starting_frames < max_user_starting_frames):
@@ -526,26 +509,38 @@ class pose_detection:
       while (index <= frames and index <= end):
         frame_list.append(index)
         index += refresh_int
+      print(index)
+      print(end)
       return frame_list
   
   def compare_analysis_frames(self):
-    pro_cap = cv2.VideoCapture(self.pro_vid_path)
-    user_cap = cv2.VideoCapture(self.user_vid_path)
+    pro_cap = cv2.VideoCapture(self.VIDEO_FILES[1])
+    user_cap = cv2.VideoCapture(self.VIDEO_FILES[0])
     user_frame_list = self.analysis_frames["user"]
-    for idx, frame_num in enumerate(self.analysis_frames["pro"]):
-        pro_image = pro_cap.set(2, frame_num - 1)
-        res, pro_frame = pro_cap.read()
-        print(pro_cap)
-        user_image = user_cap.set(2, user_frame_list[idx] - 1)
-        res, user_frame = user_cap.read()
-        print(user_cap)
-        image_list = [pro_frame, user_frame]
-        self.detect_pose_comparison(image_list)
-pd = pose_detection("./test_inputs/video/charlie1vid.mp4", "./test_inputs/video/charlie2vid.mp4")
+    with mp_pose.Pose(
+        static_image_mode=True,
+        model_complexity=2,
+        enable_segmentation=True,
+        min_detection_confidence=0.5) as pose:
+        for idx, frame_num in enumerate(self.analysis_frames["pro"]):
+            pro_cap.set(1, frame_num - 1)
+            pro_ret, pro_image = pro_cap.read()
+            if not pro_ret:
+                continue
+            user_cap.set(1, user_frame_list[idx] - 1)
+            user_ret, user_image = user_cap.read()
+            if not user_ret:
+                continue
+            self.landmarks_array[0] = self.detect_pose_comparison(user_image, "user" + str(user_frame_list[idx]), pose)
+            self.landmarks_array[1] = self.detect_pose_comparison(pro_image, "pro" + str(frame_num), pose)
+            print ("user" + str(user_frame_list[idx]) + "and pro" + str(frame_num))
+            self.body_check()
 
-# print(pd.synchronize("./vid_extract_frames/user", "./vid_extract_frames/pro", 1))
-pd.synchronize(0)
+
+pd = pose_detection("./test_inputs/video/charlie1vid.mp4", "./test_inputs/video/charlie2vid.mp4")
 tic = time.perf_counter()
+# print(pd.synchronize("./vid_extract_frames/user", "./vid_extract_frames/pro", 1))
+pd.synchronize(1)
 pd.compare_analysis_frames()
 toc = time.perf_counter()
 print("time: " + str(toc - tic))
