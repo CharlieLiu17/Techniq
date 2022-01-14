@@ -582,19 +582,31 @@ class pose_detection:
         landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
     cv2.putText(pro_image, "PRO", org, font,
                 fontScale, color, thickness, cv2.LINE_AA)
-    images = np.concatenate((user_image, pro_image), axis=1)
+    images = self.hconcat_resize_min([user_image, pro_image])
+    # images = np.concatenate((user_image, pro_image), axis=1)
     y0, dy = 50, 25 * fontScale
     for i, line in enumerate(self.analysis_text.split('\n')):
         y = int(y0 + i*dy)
         print("y:" + str(y))
         cv2.putText(bg_img, line, (50, y), font, fontScale, color, thickness, cv2.LINE_AA)
-    display = np.concatenate((images, bg_img), axis=0)
+    # display = np.concatenate((images, bg_img), axis=0)
+    display = self.vconcat_resize_min([user_image, pro_image])
     display = self.resize_image(display)
 
     cv2.imshow("Analysis", display)
     if cv2.waitKey(0) & 0xFF == 27:
         return
-pd = pose_detection("./test_inputs/video/charlie1vid.mp4", "./test_inputs/video/charlie2vid.mp4")
+  def hconcat_resize_min(self, im_list, interpolation=cv2.INTER_CUBIC):
+    h_min = min(im.shape[0] for im in im_list)
+    im_list_resize = [cv2.resize(im, (int(im.shape[1] * h_min / im.shape[0]), h_min), interpolation=interpolation)
+                    for im in im_list]
+    return cv2.hconcat(im_list_resize)
+  def vconcat_resize_min(self, im_list, interpolation=cv2.INTER_CUBIC):
+    w_min = min(im.shape[1] for im in im_list)
+    im_list_resize = [cv2.resize(im, (w_min, int(im.shape[0] * w_min / im.shape[1])), interpolation=interpolation)
+                    for im in im_list]
+    return cv2.vconcat(im_list_resize)
+pd = pose_detection("./test_inputs/video/shooting/charlie_shooting_leftside.mp4", "./test_inputs/video/shooting/steph_curry_leftside.mp4")
 tic = time.perf_counter()
 # print(pd.synchronize("./vid_extract_frames/user", "./vid_extract_frames/pro", 1))
 pd.synchronize(1)
