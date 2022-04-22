@@ -35,11 +35,12 @@ def extract_all_frame(vid_path, category):
         ret, frame = cap.read()
         if ret == False:
             break
-        cv2.imwrite('./vid_extract_frames/' + category + '/frame'+ str(i) +'.jpg', frame)
+        cv2.imwrite(f"./vid_extract_frames/{category}/frame{i}.jpg", frame)
         i+=1
     
     cap.release()
     cv2.destroyAllWindows()
 
 
-extract_all_frame("./test_inputs/video/charlie1vid.mp4", 'user')
+extract_all_frame("./test_inputs/video/shooting/charlie_shooting_leftside.mp4", 'charlie_shooting_user')
+extract_all_frame("./test_inputs/video/shooting/steph_curry_leftside.mp4", 'curry_shooting_pro')

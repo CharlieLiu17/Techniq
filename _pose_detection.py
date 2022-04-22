@@ -34,6 +34,7 @@ class pose_detection:
     self.user_frame_count = 0
     self.analysis_frames = {}
     self.analysis_text = "" #stored code
+    self.mpDraw = mp.solutions.drawing_utils
     # self.analysis_frames = {'pro': [3, 7, 11, 15, 19, 23, 27, 31, 35, 39, 43, 47, 51, 55, 59, 63], 'user': [8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68]}
 
   def detect_pose_comparison(self, image, tag, pose):
@@ -293,7 +294,6 @@ class pose_detection:
     # find the angle between the two hips with the nose at the origins 
     nose = self.landmarks_array[1].landmark[0]
     user_left_hip = self.landmarks_array[0].landmark[23]
-    print("user left hip", user_left_hip)
     pro_left_hip = self.landmarks_array[1].landmark[23]
     z_angle = self.get_2D_angle("z",user_left_hip, nose, pro_left_hip)  # angle in the x-y plane- angle of rotation about z axis 
     y_angle = self.get_2D_angle("y",user_left_hip, nose, pro_left_hip)
@@ -321,7 +321,6 @@ class pose_detection:
       point.x = point_array[0]
       point.y = point_array[1]
       point.z = point_array[2]
-      #print(point.x, point.y, point.z)
         
   def get_angle(self, landmark_one, landmark_two, landmark_three):
     vector_one = self.get_vector(landmark_two, landmark_one)
@@ -412,6 +411,7 @@ class pose_detection:
 
         frame_refresh_int = round(fps * refresh_rate)
 
+        
         i = 0 
         while(cap.isOpened()):
             ret, image = cap.read()
@@ -435,11 +435,8 @@ class pose_detection:
                 #checking for local maximums and minimums
                 if ((last_two[0][1] < angle and last_two[0][1] < last_two[1][1]) or (last_two[0][1] > angle and last_two[0][1] > last_two[1][1])):
                     delta = abs(last_two[0][1] - angle) + abs(last_two[0][1] - last_two[1][1])
-                    # print(str(last_two[1][0]) + ": " + str(math.degrees(last_two[1][1])))
-                    # print("pro" + str(last_two[0][0]) + ": " + str(math.degrees(last_two[0][1])))
-                    # print(str(i) + ": " + str(math.degrees(angle)))
-                    # print(" ")
-                    if (last_two[0][1] < sharpest_angle and delta > sharpest_delta):
+                    #  and delta > sharpest_delta
+                    if (last_two[0][1] < sharpest_angle):
                         sharpest_delta = delta
                         sharpest_angle = last_two[0][1]
                         sharpest_delta_frame_num = last_two[0][0]
@@ -538,20 +535,23 @@ class pose_detection:
                 continue
             self.landmarks_array[0] = self.detect_pose_comparison(user_image, "user" + str(user_frame_list[idx]), pose)
             self.landmarks_array[1] = self.detect_pose_comparison(pro_image, "pro" + str(frame_num), pose)
-            print ("user" + str(user_frame_list[idx]) + "and pro" + str(frame_num))
+            print ("user" + str(user_frame_list[idx]) + " and pro" + str(frame_num))
+            if (None in self.landmarks_array):
+                return
             self.body_check()
             self.final_display(user_image, pro_image)
 
   def resize_image(self, image):
-    scale_percent = 30 # percent of original size
+    scale_percent = 100 # percent of original size
     width = int(image.shape[1] * scale_percent / 100)
     height = int(image.shape[0] * scale_percent / 100)
     dim = (width, height)
     
     # resize image
     return cv2.resize(image, dim, interpolation = cv2.INTER_AREA)
+
   def final_display(self, user_image, pro_image):
-    window_name = 'Image'
+    window_name = 'Analysis'
   
     # font
     font = cv2.FONT_HERSHEY_SIMPLEX
@@ -565,51 +565,77 @@ class pose_detection:
     # Blue color in BGR
     color = (255, 0, 0)
     bg_img = np.zeros([512,2160,3],dtype=np.uint8)
-    bg_img.fill(255)
+    bg_img.fill(240)
     # Line thickness of 2 px
-    thickness = 2 
+    line_thickness = 6
+    landmark_thickness = 7
+    text_thickness = 5
+    
+    # MEDIAPIPE COLOR TAKES BGR VALUES
+    USER_LANDMARK_COLOR = (245, 117, 66)
+    PRO_LANDMARK_COLOR = (245, 117, 66)
+
+    USER_CONNECTION_WRONG_COLOR = (230 ,66, 245)
+    USER_CONNECTION_CORRECT_COLOR = (0, 255, 223)
+
+    #pro's always correct
+    PRO_CONNECTION_CORRECT_COLOR = (50, 205, 50)
+
+    #TODO: Make correct connections in user pro connection color
+
     mp_drawing.draw_landmarks(
         user_image,
         self.landmarks_array[0],
         mp_pose.POSE_CONNECTIONS,
-        landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
+        landmark_drawing_spec=self.mpDraw.DrawingSpec(color=USER_LANDMARK_COLOR, thickness=landmark_thickness, circle_radius=2),
+        connection_drawing_spec=self.mpDraw.DrawingSpec(color=USER_CONNECTION_WRONG_COLOR, thickness=line_thickness, circle_radius=2))
+
     cv2.putText(user_image, "USER", org, font,
-                    fontScale, color, thickness, cv2.LINE_AA)
+                    fontScale, color, text_thickness, cv2.LINE_AA)
+
     mp_drawing.draw_landmarks(
         pro_image,
         self.landmarks_array[1],
         mp_pose.POSE_CONNECTIONS,
-        landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
+        landmark_drawing_spec=self.mpDraw.DrawingSpec(color=PRO_LANDMARK_COLOR, thickness=landmark_thickness, circle_radius=2),
+        connection_drawing_spec=self.mpDraw.DrawingSpec(color=PRO_CONNECTION_CORRECT_COLOR, thickness=line_thickness, circle_radius=2))
+
     cv2.putText(pro_image, "PRO", org, font,
-                fontScale, color, thickness, cv2.LINE_AA)
+                fontScale, color, text_thickness, cv2.LINE_AA)
+
     images = self.hconcat_resize_min([user_image, pro_image])
     # images = np.concatenate((user_image, pro_image), axis=1)
     y0, dy = 50, 25 * fontScale
     for i, line in enumerate(self.analysis_text.split('\n')):
         y = int(y0 + i*dy)
         print("y:" + str(y))
-        cv2.putText(bg_img, line, (50, y), font, fontScale, color, thickness, cv2.LINE_AA)
+        cv2.putText(bg_img, line, (50, y), font, fontScale, color, text_thickness, cv2.LINE_AA)
     # display = np.concatenate((images, bg_img), axis=0)
-    display = self.vconcat_resize_min([user_image, pro_image])
+    display = self.vconcat_resize_min([images, bg_img])
     display = self.resize_image(display)
 
-    cv2.imshow("Analysis", display)
+    cv2.imshow(window_name, display)
     if cv2.waitKey(0) & 0xFF == 27:
         return
+
   def hconcat_resize_min(self, im_list, interpolation=cv2.INTER_CUBIC):
     h_min = min(im.shape[0] for im in im_list)
+    print(h_min)
     im_list_resize = [cv2.resize(im, (int(im.shape[1] * h_min / im.shape[0]), h_min), interpolation=interpolation)
                     for im in im_list]
     return cv2.hconcat(im_list_resize)
+
   def vconcat_resize_min(self, im_list, interpolation=cv2.INTER_CUBIC):
     w_min = min(im.shape[1] for im in im_list)
     im_list_resize = [cv2.resize(im, (w_min, int(im.shape[0] * w_min / im.shape[1])), interpolation=interpolation)
                     for im in im_list]
     return cv2.vconcat(im_list_resize)
+
 pd = pose_detection("./test_inputs/video/shooting/charlie_shooting_leftside.mp4", "./test_inputs/video/shooting/steph_curry_leftside.mp4")
+# pd = pose_detection("./test_inputs/video/charlie1vid.mp4", "./test_inputs/video/charlie2vid.mp4")
 tic = time.perf_counter()
 # print(pd.synchronize("./vid_extract_frames/user", "./vid_extract_frames/pro", 1))
-pd.synchronize(1)
+pd.synchronize(0)
 pd.compare_analysis_frames()
 toc = time.perf_counter()
 print("time: " + str(toc - tic))
