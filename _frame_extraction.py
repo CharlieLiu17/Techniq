@@ -42,5 +42,5 @@ def extract_all_frame(vid_path, category):
     cv2.destroyAllWindows()
 
 
-extract_all_frame("./test_inputs/video/shooting/charlie_shooting_leftside.mp4", 'charlie_shooting_user')
-extract_all_frame("./test_inputs/video/shooting/steph_curry_leftside.mp4", 'curry_shooting_pro')
+# extract_all_frame("./test_inputs/video/shooting/charlie_shooting_leftside.mp4", 'charlie_shooting_user')
+extract_all_frame("./test_inputs/video/skating/chen_axel.mp4", 'chen_axel_pro')

@@ -537,12 +537,12 @@ class pose_detection:
             self.landmarks_array[1] = self.detect_pose_comparison(pro_image, "pro" + str(frame_num), pose)
             print ("user" + str(user_frame_list[idx]) + " and pro" + str(frame_num))
             if (None in self.landmarks_array):
-                return
+                continue
             self.body_check()
             self.final_display(user_image, pro_image)
 
   def resize_image(self, image):
-    scale_percent = 100 # percent of original size
+    scale_percent = 30 # percent of original size
     width = int(image.shape[1] * scale_percent / 100)
     height = int(image.shape[0] * scale_percent / 100)
     dim = (width, height)
@@ -631,11 +631,12 @@ class pose_detection:
                     for im in im_list]
     return cv2.vconcat(im_list_resize)
 
-pd = pose_detection("./test_inputs/video/shooting/charlie_shooting_leftside.mp4", "./test_inputs/video/shooting/steph_curry_leftside.mp4")
+
+pd = pose_detection("./test_inputs/video/frisbee/brodie_flick.mp4", "./test_inputs/video/frisbee/brodie_flick2.mp4")
 # pd = pose_detection("./test_inputs/video/charlie1vid.mp4", "./test_inputs/video/charlie2vid.mp4")
 tic = time.perf_counter()
 # print(pd.synchronize("./vid_extract_frames/user", "./vid_extract_frames/pro", 1))
-pd.synchronize(0)
+pd.synchronize(3)
 pd.compare_analysis_frames()
 toc = time.perf_counter()
 print("time: " + str(toc - tic))
