@@ -2,6 +2,12 @@
 
 Techniq is an automatic athlete analysis app that can be used for virtually every physical sport. Techniq takes professional footage the user inputs (i.e. Steph Curry shooting a basketball) and also takes the user's own footage (i.e. themself shooting the basketball). Techniq can sync the two footages down to the frame, and will then give you frame by frame comparison of the user's form against the professional. Techniq will give differences in form in degrees for all parts of the body.
 
+## Example 
+
+Below you can find 2 video clips: One of Charlie shooting the basketball, and one of Steph Curry shooting the basketball.
+
+![](./test_inputs/video/shooting/charlie_shooting_leftside.mp4)
+
 ## Who is this for?
 
 Techniq should be used by athletes and coaches alike for form training.
