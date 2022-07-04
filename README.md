@@ -12,7 +12,10 @@ Coaches can also greatly benefit from this. An athlete and a coach have limited 
 
 ## Why did we make Techniq?
 
-Techniq was a product of a HackGT8, by Team STAC. STAC was composed of Charlie Liu, Amal Chaudry, Tina Nguyen, and Sheza Chaudry 
+Techniq was a product of a HackGT8, by Team STAC. STAC was composed of Charlie Liu, Amal Chaudry, Tina Nguyen, and Sheza Chaudhry. Charlie came up with the idea, as he was an elite figure skater in high school. He saw a personal need for the app, and even after HackGT8, continued to work on it. He currently is actively building out of the app, hoping to bring it to mobile in the near future.
+
+## Installation
+
 Python Version: 3.8.5
 
 venv creation and activation:   (virtual environment (venv) lets you
