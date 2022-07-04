@@ -6,7 +6,18 @@ Techniq is an automatic athlete analysis app that can be used for virtually ever
 
 Below you can find 2 video clips: One of Charlie shooting the basketball, and one of Steph Curry shooting the basketball.
 
-![](./test_inputs/video/shooting/charlie_shooting_leftside.mp4)
+
+https://user-images.githubusercontent.com/50965230/177166271-6b589611-bdd9-41f7-a88c-261ab094071c.mp4
+
+https://user-images.githubusercontent.com/50965230/177166466-c55cc1dd-3aa2-4dea-bbae-6f7618bdd61e.mp4
+
+Running the program on these two inputs, the result generated is a series of side-by-side frames: 
+
+
+
+https://user-images.githubusercontent.com/50965230/177167812-9726e84a-3cda-4e6a-b74d-05a9f2544cc1.mp4
+
+
 
 ## Who is this for?
 
