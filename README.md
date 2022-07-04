@@ -23,7 +23,7 @@ https://user-images.githubusercontent.com/50965230/177167812-9726e84a-3cda-4e6a-
 
 Techniq should be used by athletes and coaches alike for form training.
 
-Athletes can never always be under the watchful eye of a coach. And whil this app obviously can't completely replicate a coach, it can be a pivotal tool speeden the learning feedback loop for the athlete.
+Athletes are never always under the watchful eye of a coach. And while this app obviously can't completely replicate a coach, it can be a pivotal tool that speedens the learning feedback loop for the athlete.
 
 Coaches can also greatly benefit from this. An athlete and a coach have limited time together, and that time is wasted if the two of them stand around for the coach to manually sync the videos. Additionally, the app may even spot faults in form that even the coach could not detect in real-time.
 
