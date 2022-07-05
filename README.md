@@ -11,13 +11,15 @@ https://user-images.githubusercontent.com/50965230/177166271-6b589611-bdd9-41f7-
 
 https://user-images.githubusercontent.com/50965230/177166466-c55cc1dd-3aa2-4dea-bbae-6f7618bdd61e.mp4
 
-Running the program on these two inputs, the result generated is a series of side-by-side frames: 
-
-
+### Running the program on these two inputs, the result generated is a series of side-by-side frames: 
 
 https://user-images.githubusercontent.com/50965230/177167812-9726e84a-3cda-4e6a-b74d-05a9f2544cc1.mp4
 
+### Another example with the figure skating jump, the axel
 
+https://user-images.githubusercontent.com/50965230/177243187-7b14fb76-bcaa-4736-a4ec-3dd9cab62f23.mp4
+
+Notice the significantly different camera angles, yet Techniq can still correctly synchronize.
 
 ## Who is this for?
 
