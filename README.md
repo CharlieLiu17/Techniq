@@ -19,7 +19,7 @@ https://user-images.githubusercontent.com/50965230/177167812-9726e84a-3cda-4e6a-
 
 https://user-images.githubusercontent.com/50965230/177243187-7b14fb76-bcaa-4736-a4ec-3dd9cab62f23.mp4
 
-Notice the significantly different camera angles, yet Techniq can still correctly synchronize.
+Notice even with significantly different camera angles, Techniq can still correctly synchronize.
 
 ## Who is this for?
 
