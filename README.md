@@ -15,7 +15,15 @@ https://user-images.githubusercontent.com/50965230/177166466-c55cc1dd-3aa2-4dea-
 
 https://user-images.githubusercontent.com/50965230/177167812-9726e84a-3cda-4e6a-b74d-05a9f2544cc1.mp4
 
-### Another example with the figure skating jump, the axel
+### Another example with the figure skating jump, the axel.
+
+Initial clips:
+
+https://user-images.githubusercontent.com/50965230/180627533-3702b083-f3a9-4df0-a0f0-0421e58e5d87.mp4
+
+https://user-images.githubusercontent.com/50965230/180627534-76347d69-1213-4f08-b7e8-d74ed2c65a32.mp4
+
+Output:
 
 https://user-images.githubusercontent.com/50965230/177243187-7b14fb76-bcaa-4736-a4ec-3dd9cab62f23.mp4
 
